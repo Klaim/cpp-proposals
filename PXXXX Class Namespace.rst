@@ -164,9 +164,11 @@ However, the use of trailing and inferred return types already mitigates this si
 
 The author feels that a decision whether or not to include this definition should be based mainly on a "principle of least surprise" given code such as the first example in this section.
 
-This same principle could, perhaps more usefully, be extended to the class name itself::
+This same principle could, perhaps more usefully, be extended to the class name itself as it appears in the scope introduction::
 
   template <typename T> namespace class B // implicitly: B<T>
+
+This would (necessarily) be an optional feature; a template argument list may still be specified (as is necessary for e.g. specialization).
 
 
 Acknowledgments
