@@ -121,6 +121,8 @@ Per the transformation rule, it works with specializations, as one would expect:
     ...
   }
 
+(Note that this is allowed with or without a specialization of ``Foo<int>``.)
+
 
 Discussion
 ==========
