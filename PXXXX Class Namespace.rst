@@ -52,6 +52,7 @@ The effect of this scope is to treat each member definition (variable or method)
   // Existing syntax
   A::A(...) { ... }
   void A::foo(...) { ... }
+  int A::value = ...;
 
   template <typename T> B<T>::B(...) { ... }
   template <typename T> B<T>& B<T>::operator=(B<T> const& other) { ... }
@@ -61,6 +62,7 @@ The effect of this scope is to treat each member definition (variable or method)
   namespace class A {
     A(...) { ... }
     void foo() { ... }
+    int value = ...;
   }
 
   template <typename T>
