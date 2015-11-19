@@ -75,6 +75,53 @@ The effect of this scope is to treat each member definition (variable or method)
 Additionally, ``namespace struct`` and ``namespace class`` shall be equivalent and interchangeable.
 
 
+Specification
+=============
+
+The most straight forward way in which to describe this feature is with a syntax transformation. Specifically, the syntax:
+
+.. parsed-literal::
+
+  *[<template_specification>]* **namespace class** *<name>* **{**
+    *[<type>]* *<member_name><...>*
+  **}**
+
+...shall be equivalent to:
+
+.. parsed-literal::
+
+  *[<template_specification>]* *[<type>]* *<name>*\ **::**\ *<member_name><...>*
+
+...for each *<member_name>* in the scope. Rules for interpretation of members within a class name scope, and for what sorts of code is permitted or ill-formed, may all be derived directly from this transformation.
+
+
+Additional Examples
+===================
+
+This feature is particularly useful for template members of template classes::
+
+  template <typename T> class Foo
+  {
+    template <typename U> void foo(U);
+  };
+
+  template <typename T> namespace class Foo
+  {
+    template <typename U> void foo(U) { ... }
+  }
+
+  // Compare to the old syntax:
+  template <typename T> template <typename U>
+  void Foo<T>::foo<U>(U) { ... }
+
+Per the transformation rule, it works with specializations, as one would expect::
+
+  template <> namespace class Foo<int>
+  {
+    ...
+  }
+
+
 Discussion
 ==========
 
@@ -82,9 +129,10 @@ The proposed syntax for introducing the scope is open for debate. Alternative su
 
 #. ``class namespace <name>``
 #. ``namespace <classname>``
-#. Introduction of a new keyword.
+#. Introduction of a new contextual keyword, e.g. ``class <name> implementation``.
+#. Introduction of a new (global) keyword.
 
-The author considers #1 to be equally as good as the suggested syntax. #2 is nearly as good, although it risks confusion, as the reader must know a priori if the named scope is a class. The #2 syntax would only introduce a class name scope if the identifier following the ``namespace`` keyword is an already declared class-type. #3 has the advantage of maximum possible clarity, but introducing new keywords without breaking existing code is always tricky. Additionally, the author was unable to come up with any ideas for new keywords that seemed a significant improvement over the other suggestions.
+The author considers #1 to be equally as good as the suggested syntax. #2 is nearly as good, although it risks confusion, as the reader must know a priori if the named scope is a class. The #2 syntax would only introduce a class name scope if the identifier following the ``namespace`` keyword is an already declared class-type. #3 is of similar quality to #2; it lacks the ambiguity problem, but the indication that "something is different" occurs later, and it does require a new (albeit contextual) keyword. #4 has the advantage of maximum possible clarity, but introducing new keywords without breaking existing code is always tricky. Additionally, the author was unable to come up with any ideas for new keywords that seemed a significant improvement over the other suggestions.
 
 
 Possible Additions
@@ -109,10 +157,14 @@ However, the use of trailing and inferred return types already mitigates this si
 
 The author feels that a decision whether or not to include this definition should be based mainly on a "principle of least surprise" given code such as the first example in this section.
 
+This same principle could, perhaps more usefully, be extended to the class name itself::
+
+  template <typename T> namespace class B // implicitly: B<T>
+
 
 Acknowledgments
 ===============
 
-The original suggestion that spawned this proposal comes from John Yates. Other contemporary participants include Larry Evans, Russell Greene, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
+The original suggestion that spawned this proposal comes from John Yates. Miro Knejp contributed some valuable suggestions. Other contemporary participants include Larry Evans, Russell Greene, Bjorn Reese, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
 
 .. |--| unicode:: U+02014 .. em dash
