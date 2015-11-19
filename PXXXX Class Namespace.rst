@@ -72,7 +72,12 @@ The effect of this scope is to treat each member definition (variable or method)
     void bar(...) { ... }
   }
 
-Additionally, ``namespace struct`` and ``namespace class`` shall be equivalent and interchangeable.
+Additionally:
+
+- ``namespace struct`` and ``namespace class`` shall be equivalent and interchangeable.
+- As with traditional namespaces, a ``;`` is not required following the closing ``}``.
+- Access modifiers are not allowed in a class name scope. (They aren't allowed outside of a class definition, and the class name scope is not a class definition.)
+- A class name scope is not a way to add additional members to a class.
 
 
 Specification
