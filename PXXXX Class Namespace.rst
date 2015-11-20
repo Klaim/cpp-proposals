@@ -30,6 +30,26 @@ This is a real, extant problem. Presumably as a result of this overhead, some au
 
 (See https://groups.google.com/a/isocpp.org/forum/#!topic/std-proposals/e0_ceXFQX-A for additional discussion.)
 
+It is also worth noting that this situation is inconsistent with namespaces. Given a function declared in a namespace::
+
+  namespace Foo
+  {
+    void foo();
+  }
+
+There are currently two ways to provide the definition::
+
+  // Method 1: fully qualified
+  void Foo::foo() { ... }
+
+  // Method 2: namespace scope
+  namespace Foo
+  {
+    void foo() { ... }
+  }
+
+There is currently no equivalent to the second form for class members. This proposal would remove this inconsistency.
+
 
 Proposal
 ========
