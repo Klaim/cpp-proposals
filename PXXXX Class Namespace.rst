@@ -80,6 +80,7 @@ Additionally:
 - As with traditional namespaces, a ``;`` is not required following the closing ``}``.
 - Access modifiers are not allowed in a class name scope. (They aren't allowed outside of a class definition, and the class name scope is not a class definition.)
 - A class name scope is not a way to add additional members to a class.
+- This proposal does not affect ``using`` directives. (A ``using`` directive on a class name scope remains illegal.)
 
 
 Specification
@@ -134,6 +135,9 @@ Per the transformation rule, it works with specializations, as one would expect:
 Discussion
 ==========
 
+Syntax
+------
+
 The proposed syntax for introducing the scope is open for debate. Alternative suggestions include:
 
 #. ``class namespace <name>``
@@ -142,6 +146,11 @@ The proposed syntax for introducing the scope is open for debate. Alternative su
 #. Introduction of a new (global) keyword.
 
 The author considers #1 to be equally as good as the suggested syntax. #2 is nearly as good, although it risks confusion, as the reader must know a priori if the named scope is a class. The #2 syntax would only introduce a class name scope if the identifier following the ``namespace`` keyword is an already declared class-type. #3 is of similar quality to #2; it lacks the ambiguity problem, but the indication that "something is different" occurs later, and it does require a new (albeit contextual) keyword. #4 has the advantage of maximum possible clarity, but introducing new keywords without breaking existing code is always tricky. Additionally, the author was unable to come up with any ideas for new keywords that seemed a significant improvement over the other suggestions.
+
+Inline
+------
+
+Should ``inline namespace class <name>`` be permitted? The "inline namespace" concept does not make sense in this context. If it is permitted, it should be equivalent to including ``inline`` as part of every contained definition. The author's inclination is to forbid use of ``inline`` with ``namespace class``.
 
 
 Acknowledgments
