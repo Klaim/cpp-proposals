@@ -158,6 +158,6 @@ Should ``inline namespace class <name>`` be permitted? The "inline namespace" co
 Acknowledgments
 ===============
 
-The original suggestion that spawned this proposal comes from John Yates. Miro Knejp and Péter Radics contributed some valuable suggestions. Other contemporary participants include Larry Evans, Russell Greene, Bjorn Reese, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
+The original feature request that spawned this proposal comes from John Yates. Miro Knejp and Péter Radics contributed valuable suggestions. Other contemporary participants include Larry Evans, Russell Greene, Bjorn Reese, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
 
 .. |--| unicode:: U+02014 .. em dash
