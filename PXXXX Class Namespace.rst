@@ -74,6 +74,8 @@ The effect of this scope is to treat each member definition (variable or method)
 
 Following the introduction of the scope (i.e. the keywords ``namespace class``), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of ``Enum`` without the ``B::`` qualifier). (These rules should be applied in the same manner as for a class definition.)
 
+Some consequences of the scope acting simply as a name transformation should be noted. First, such a scope can be "opened" on the same class name any number of times. Second, definitions in a class name scope may be mixed with traditional, fully qualified definitions (provided that no definitions are duplicated, as always). Third, an empty scope is permissible as long as the named class is recognized.
+
 Additionally:
 
 - ``namespace struct`` and ``namespace class`` shall be equivalent and interchangeable.
