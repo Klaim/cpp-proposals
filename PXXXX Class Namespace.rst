@@ -51,7 +51,7 @@ The effect of this scope is to treat each member definition (variable or method)
 
   // Existing syntax
   A::A(...) { ... }
-  void A::foo(...) { ... }
+  A::Enum A::foo(...) { ... }
   int A::value = ...;
 
   template <typename T> B<T>::B(...) { ... }
@@ -61,16 +61,18 @@ The effect of this scope is to treat each member definition (variable or method)
   // Proposed syntax
   namespace class A {
     A(...) { ... }
-    void foo() { ... }
+    Enum foo() { ... }
     int value = ...;
   }
 
   template <typename T>
-  namespace class B<T> {
+  namespace class B {
     B(...) { ... }
-    B<T>& operator=(B<T> const& other) { ... }
+    B& operator=(B const& other) { ... }
     void bar(...) { ... }
   }
+
+Following the introduction of the scope (i.e. the keywords ``namespace class``), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of ``Enum`` without the ``B::`` qualifier). (These rules should be applied in the same manner as for a class definition.)
 
 Additionally:
 
@@ -142,38 +144,9 @@ The proposed syntax for introducing the scope is open for debate. Alternative su
 The author considers #1 to be equally as good as the suggested syntax. #2 is nearly as good, although it risks confusion, as the reader must know a priori if the named scope is a class. The #2 syntax would only introduce a class name scope if the identifier following the ``namespace`` keyword is an already declared class-type. #3 is of similar quality to #2; it lacks the ambiguity problem, but the indication that "something is different" occurs later, and it does require a new (albeit contextual) keyword. #4 has the advantage of maximum possible clarity, but introducing new keywords without breaking existing code is always tricky. Additionally, the author was unable to come up with any ideas for new keywords that seemed a significant improvement over the other suggestions.
 
 
-Possible Additions
-==================
-
-A potential addition to the proposal in the case of template classes would be to assume the same template parameters when the class name appears without a template argument list. For example::
-
-  template <typename T>
-  namespace class B<T> {
-    B& operator=(B const& other) { ... }
-  }
-
-Using only the above rules, this would be equivalent to::
-
-  template <typename T> B& B<T>::operator=(B const& other) { ... } // error
-
-...which is illegal because the template type ``B`` is used without an argument list. This is currently an issue because the use of ``B`` specifying the context of the member function follows the use of ``B`` as a return type. Since the typical use is to use the same arguments as the member context, and since the member context has been declared as the enclosing scope, it becomes much more practical to treat a use of the class name without a template argument list as having the same template arguments as the enclosing scope. (Cases where this is not correct would be able to provide a template argument list as usual.)
-
-However, the use of trailing and inferred return types already mitigates this significantly::
-
-  template <typename T> auto B<T>::operator=(B const& other) -> B& {  } // okay in C++11 or later
-
-The author feels that a decision whether or not to include this definition should be based mainly on a "principle of least surprise" given code such as the first example in this section.
-
-This same principle could, perhaps more usefully, be extended to the class name itself as it appears in the scope introduction::
-
-  template <typename T> namespace class B // implicitly: B<T>
-
-This would (necessarily) be an optional feature; a template argument list may still be specified (as is necessary for e.g. specialization).
-
-
 Acknowledgments
 ===============
 
-The original suggestion that spawned this proposal comes from John Yates. Miro Knejp contributed some valuable suggestions. Other contemporary participants include Larry Evans, Russell Greene, Bjorn Reese, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
+The original suggestion that spawned this proposal comes from John Yates. Miro Knejp and Péter Radics contributed some valuable suggestions. Other contemporary participants include Larry Evans, Russell Greene, Bjorn Reese, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
 
 .. |--| unicode:: U+02014 .. em dash
