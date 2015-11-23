@@ -2,10 +2,18 @@
   Class Namespace
 ===================
 ~~~~~~~~~~~~~~~~~~~
- November 19, 2015
+ November 23, 2015
 ~~~~~~~~~~~~~~~~~~~
 
+.. role:: cpp(code)
+   :language: c++
+
+Abstract
+========
+
 This proposal provides a new language feature, "class namespace", as a shortcut for providing a series of definitions belonging to a class scope, similar to the manner in which a traditional namespace can provide a series of definitions belonging to a namespace scope.
+
+.. contents::
 
 
 Rationale
@@ -13,14 +21,18 @@ Rationale
 
 `Don't Repeat Yourself <https://en.wikipedia.org/wiki/Don't_repeat_yourself>`_ (DRY) is a well known principle of software design. However, there are certain instances when providing definitions of class members that can fall prey to repetition, to the detriment of readability and maintainability.
 
-We will present, as a particularly egregious example, a complicated template class::
+We will present, as a particularly egregious example, a complicated template class:
+
+.. code:: c++
 
   template <typename CharType, typename Traits, typename Allocator>
   class MyString { ... };
 
 There are strong reasons why method definitions should not be inline. For starters, they inhibit readability; it is difficult to quickly parse the interface |--| especially the public interface |--| as declarations and definitions are necessarily interleaved. Additionally, they are *inline*, which results in all manner of compile time and cross-version compatibility issues. Even for template classes, it is sometimes preferred to keep definitions in a separate TU (e.g. extern templates with only specific, exported explicit instantiations).
 
-The problem that arises is the necessity to repeat a long prefix for all definitions provided outside of the class definition. For example::
+The problem that arises is the necessity to repeat a long prefix for all definitions provided outside of the class definition. For example:
+
+.. code:: c++
 
   template <typename CharType, typename Traits, typename Allocator>
   MyString<CharType, Traits, Allocator>::MyString
@@ -30,14 +42,18 @@ This is a real, extant problem. Presumably as a result of this overhead, some au
 
 (See https://groups.google.com/a/isocpp.org/forum/#!topic/std-proposals/e0_ceXFQX-A for additional discussion.)
 
-It is also worth noting that this situation is inconsistent with namespaces. Given a function declared in a namespace::
+It is also worth noting that this situation is inconsistent with namespaces. Given a function declared in a namespace:
+
+.. code:: c++
 
   namespace Foo
   {
     void foo();
   }
 
-There are currently two ways to provide the definition::
+...there are currently two ways to provide the definition:
+
+.. code:: c++
 
   // Method 1: fully qualified
   void Foo::foo() { ... }
@@ -54,7 +70,9 @@ There is currently no equivalent to the second form for class members. This prop
 Proposal
 ========
 
-This proposal is to eliminate the redundancy by introducing a new "class scope" syntax, as follows::
+This proposal is to eliminate the redundancy by introducing a new "class scope" syntax, as follows:
+
+.. code:: c++
 
   template <...> // optional; only used for template classes
   namespace class Name
@@ -62,7 +80,9 @@ This proposal is to eliminate the redundancy by introducing a new "class scope" 
     // definitions of class members
   }
 
-The effect of this scope is to treat each member definition (variable or method) as if it were prefixed by the class template specification and name. Specifically, these two codes would be exactly equivalent::
+The effect of this scope is to treat each member definition (variable or method) as if it were prefixed by the class template specification and name. Specifically, these two codes would be exactly equivalent:
+
+.. code:: c++
 
   // Declarations
   class A { ... };
@@ -92,17 +112,17 @@ The effect of this scope is to treat each member definition (variable or method)
     void bar(...) { ... }
   }
 
-Following the introduction of the scope (i.e. the keywords ``namespace class``), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of ``Enum`` without the ``B::`` qualifier). (These rules should be applied in the same manner as for a class definition.)
+Following the introduction of the scope (i.e. the keywords :cpp:`namespace class`), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of :cpp:`Enum` without the :cpp:`B::` qualifier). (These rules should be applied in the same manner as for a class definition.)
 
 Some consequences of the scope acting simply as a name transformation should be noted. First, such a scope can be "opened" on the same class name any number of times. Second, definitions in a class name scope may be mixed with traditional, fully qualified definitions (provided that no definitions are duplicated, as always). Third, an empty scope is permissible as long as the named class is recognized.
 
 Additionally:
 
-- ``namespace struct`` and ``namespace class`` shall be equivalent and interchangeable.
-- As with traditional namespaces, a ``;`` is not required following the closing ``}``.
+- :cpp:`namespace struct` and :cpp:`namespace class` shall be equivalent and interchangeable.
+- As with traditional namespaces, a :cpp:`;` is not required following the closing :cpp:`}`.
 - Access modifiers are not allowed in a class name scope. (They aren't allowed outside of a class definition, and the class name scope is not a class definition.)
 - A class name scope is not a way to add additional members to a class.
-- This proposal does not affect ``using`` directives. (A ``using`` directive on a class name scope remains illegal.)
+- This proposal does not affect :cpp:`using` directives. (A :cpp:`using` directive on a class name scope remains illegal.)
 
 
 Specification
@@ -128,7 +148,9 @@ The most straight forward way in which to describe this feature is with a syntax
 Additional Examples
 ===================
 
-This feature is particularly useful for template members of template classes::
+This feature is particularly useful for template members of template classes:
+
+.. code:: c++
 
   template <typename T> class Foo
   {
@@ -144,14 +166,16 @@ This feature is particularly useful for template members of template classes::
   template <typename T> template <typename U>
   void Foo<T>::foo<U>(U) { ... }
 
-Per the transformation rule, it works with specializations, as one would expect::
+Per the transformation rule, it works with specializations, as one would expect:
+
+.. code:: c++
 
   template <> namespace class Foo<int>
   {
     ...
   }
 
-(Note that this is allowed with or without a specialization of ``Foo<int>``.)
+(Note that this is allowed with or without a specialization of :cpp:`Foo<int>`.)
 
 
 Discussion
@@ -162,9 +186,9 @@ Syntax
 
 The proposed syntax for introducing the scope is open for debate. Alternative suggestions include:
 
-#. ``class namespace <name>``
-#. ``namespace <classname>``
-#. Introduction of a new contextual keyword, e.g. ``class <name> implementation``.
+#. :cpp:`class namespace <name>`
+#. :cpp:`namespace <classname>`
+#. Introduction of a new contextual keyword, e.g. :cpp:`class <name> implementation`.
 #. Introduction of a new (global) keyword.
 
 The author considers #1 to be equally as good as the suggested syntax. #2 is nearly as good, although it risks confusion, as the reader must know a priori if the named scope is a class. The #2 syntax would only introduce a class name scope if the identifier following the ``namespace`` keyword is an already declared class-type. #3 is of similar quality to #2; it lacks the ambiguity problem, but the indication that "something is different" occurs later, and it does require a new (albeit contextual) keyword. #4 has the advantage of maximum possible clarity, but introducing new keywords without breaking existing code is always tricky. Additionally, the author was unable to come up with any ideas for new keywords that seemed a significant improvement over the other suggestions.
@@ -172,7 +196,7 @@ The author considers #1 to be equally as good as the suggested syntax. #2 is nea
 Inline
 ------
 
-Should ``inline namespace class <name>`` be permitted? The "inline namespace" concept does not make sense in this context. If it is permitted, it should be equivalent to including ``inline`` as part of every contained definition. The author's inclination is to forbid use of ``inline`` with ``namespace class``.
+Should :cpp:`inline namespace class <name>` be permitted? The "inline namespace" concept does not make sense in this context. If it is permitted, it should be equivalent to including :cpp:`inline` as part of every contained definition. The author's inclination is to forbid use of :cpp:`inline` with :cpp:`namespace class`.
 
 
 Acknowledgments
