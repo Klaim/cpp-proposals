@@ -77,17 +77,17 @@ Naturally, "previous declaration" here means a declaration having the same name 
     return { id, result };
   }
 
-Additionally, and for obvious reasons, we propose to remove the restriction ([dcl.fct]/11) against defining types in return type specifications. We additionally note that this restriction is already not enforced by at least one major compiler (GCC).
+Additionally, and for obvious reasons, we propose to remove the prohibition ([dcl.fct]/11) against defining types in return type specifications. We additionally note that this prohibition is already not enforced by at least one major compiler (GCC). We further believe this prohibition to be outdated; it made sense in C++98, but with recent changes such as the addition of ``decltype`` and the ability to omit the type name in a ``return`` statement returning an in-place constructed class, the reasons for the prohibition have been greatly mitigated. This other part of this proposal would largely remove any remaining motivation for the prohibition.
 
 
 Discussion
 ==========
 
-An obvious follow-on question is, should we also lift the restriction against types defined in parameter specifications? There have been suggestions floated to implement the much requested named parameters in something like this manner. However, there are significant (in our opinion) reasons to not address this, at least initially. First, it is widely contested that this is not an optimal solution to the problem (named parameters) in the first place. Second, it depends on named initializers, which is an area of ongoing work. Third, this proposal works largely because C++ forbids overloading on return type, which may be leveraged to eliminate any ambiguity as to the deduction of the actual type of ``auto``; this is not the case for parameters, and so permitting ``auto`` as a parameter type specifier would quickly run into issues that can be avoided for the return type case.
+An obvious follow-on question is, should we also lift the prohibition against types defined in parameter specifications? There have been suggestions floated to implement the much requested named parameters in something like this manner. However, there are significant (in our opinion) reasons to not address this, at least initially. First, it is widely contested that this is not an optimal solution to the problem (named parameters) in the first place. Second, it depends on named initializers, which is an area of ongoing work. Third, this proposal works largely because C++ forbids overloading on return type, which may be leveraged to eliminate any ambiguity as to the deduction of the actual type of ``auto``; this is not the case for parameters, and so permitting ``auto`` as a parameter type specifier would quickly run into issues that can be avoided for the return type case.
 
 While we do not wish to categorically rule out future changes in this direction, we feel that it is not appropriate for this proposal to attempt to address these issues.
 
-On a related note, it is not strictly necessary for the sake of the added utility of implied return type to relax [dcl.fct]/11. However, much of the benefit is lost with this restriction in place. Conversely, simply relaxing the restriction is of significantly less benefit without the proposed implied return type feature. Accordingly, while we considered splitting the two changes into separate proposals, we have decided for now to keep them together.
+On a related note, it is not strictly necessary for the sake of the added utility of implied return type to relax [dcl.fct]/11. However, much of the benefit is lost with this prohibition in place. Conversely, simply relaxing the prohibition is of significantly less benefit without the proposed implied return type feature. Accordingly, while we considered splitting the two changes into separate proposals, we have decided for now to keep them together.
 
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
