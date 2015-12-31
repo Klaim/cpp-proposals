@@ -1,14 +1,16 @@
 ========================
   Implicit Return Type
 ========================
-~~~~~~~~~~~~~~~~~~~
- December 30, 2015
-~~~~~~~~~~~~~~~~~~~
+
+:Document:  PXXXX (TBD)
+:Date:      2015-12-31
+:Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
 
 .. raw:: html
 
   <style>
     html { color: black; background: white; }
+    table.docinfo { margin: 2em 0; }
   </style>
 
 .. role:: cpp(code)
@@ -19,6 +21,8 @@ Abstract
 ========
 
 This proposal recommends an enhancement to return type deduction to allow the return type of a function definition to be inferred from a previous declaration of the same.
+
+(Note: references made to the existing draft standard are made against N4567_.)
 
 .. contents::
 
@@ -92,6 +96,7 @@ On a related note, it is not strictly necessary for the sake of the added utilit
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
+.. _N4567: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
 .. _N4560: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
 .. _P0144: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
 .. _P0151: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0151r0.pdf
