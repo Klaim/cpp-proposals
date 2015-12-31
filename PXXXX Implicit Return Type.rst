@@ -77,7 +77,7 @@ Naturally, "previous declaration" here means a declaration having the same name 
     return { id, result };
   }
 
-Additionally, and for obvious reasons, we propose to remove the prohibition ([dcl.fct]/11) against defining types in return type specifications. We additionally note that this prohibition is already not enforced by at least one major compiler (GCC). We further believe this prohibition to be outdated; it made sense in C++98, but with recent changes such as the addition of ``decltype`` and the ability to omit the type name in a ``return`` statement returning an in-place constructed class, the reasons for the prohibition have been greatly mitigated. This other part of this proposal would largely remove any remaining motivation for the prohibition.
+Additionally, and for obvious reasons, we propose to remove the prohibition ([dcl.fct]/11) against defining types in return type specifications. We additionally note that this prohibition is already not enforced by at least one major compiler (MSVC). We further believe this prohibition to be outdated; it made sense in C++98, but with recent changes such as the addition of ``decltype`` and the ability to omit the type name in a ``return`` statement returning an in-place constructed class, the reasons for the prohibition have been greatly mitigated. This other part of this proposal would largely remove any remaining motivation for the prohibition.
 
 
 Discussion
