@@ -11,11 +11,18 @@
   <style>
     html { color: black; background: white; }
     table.docinfo { margin: 2em 0; }
+    .literal-block { background: #eee; border: 1px solid #ddd; padding: 0.5em; }
+    .addition { color: #2c2; text-decoration: underline; }
+    .removal { color: #e22; text-decoration: line-through; }
+    .literal-block .literal-block { background: none; border: none; }
+    .block-addition { background: #cfc; text-decoration: underline; }
   </style>
 
-.. role:: cpp(code)
-   :language: c++
+.. role:: add
+    :class: addition
 
+.. role:: del
+    :class: removal
 
 Abstract
 ========
@@ -85,6 +92,54 @@ Since this has implications with respect to return type deduction, we additional
 
 Additionally, and for obvious reasons, we propose to remove the prohibition ([dcl.fct]/11) against defining types in return type specifications. We additionally note that this prohibition is already not enforced by at least one major compiler (MSVC). We further believe this prohibition to be outdated; it made sense in C++98, but with recent changes such as the addition of ``decltype`` and the ability to omit the type name in a ``return`` statement returning an in-place constructed class, the reasons for the prohibition have been greatly mitigated. This other part of this proposal would largely remove any remaining motivation for the prohibition.
 
+
+Proposed Wording
+================
+
+(Proposed changes are specified relative N4567_.)
+
+Change [dcl.spec.auto]/13 (7.1.6.4.13) as follows:
+
+.. compound::
+  :class: literal-block
+
+  Redeclarations or specializations of a function or function template with a declared return type that uses a placeholder type shall :del:`also use that placeholder` :add:`use either that placeholder or a compatible concrete type`, not a deduced type. :add:`If the return type has previously been deduced, a declaration using a concrete type shall use the deduced type.`
+  [*Example:*
+
+  .. parsed-literal::
+
+    auto f();
+    auto f() { return 42; } // return type is int
+    auto f(); // OK
+    :del:`int f(); // error, cannot be overloaded with auto f()`
+    :add:`int f(); // OK, deduced type is also int`
+    decltype(auto) f(); // error, auto and decltype(auto) don't match
+
+    :add:`auto f(int);`
+    :add:`int f(int); // OK, return type of f(int) is now int`
+    :add:`float f(int); // error, redeclared with different return type`
+
+Add a new section to [dcl.spec.auto] (7.1.6.4) as follows:
+
+.. compound::
+  :class: literal-block block-addition
+
+  When a function is declared or defined using a placeholder type for the return type, and a previous declaration or definition having a concrete return type exists, the return type shall be inferred to be the previously seen concrete type.
+  [*Example:*
+
+  .. parsed-literal::
+
+    std::string f();
+    auto f(); // OK, return type is std::string
+
+  |--| *end example*]
+
+Change [dcl.fct]/11 (8.3.5.11) as follows:
+
+.. compound::
+  :class: literal-block
+
+  Types shall not be defined in :del:`return or` parameter types.
 
 Discussion
 ==========
