@@ -124,7 +124,7 @@ Add a new section to [dcl.spec.auto] (7.1.6.4) as follows:
 .. compound::
   :class: literal-block block-addition
 
-  When a function is declared or defined using a placeholder type for the return type, and a previous declaration or definition having a concrete return type exists, the return type shall be inferred to be the previously seen concrete type.
+  When a function is declared or defined using ``auto`` for the return type, and a previous declaration or definition having a concrete return type exists, the return type shall be inferred to be the previously seen concrete type.
   [*Example:*
 
   .. parsed-literal::
