@@ -95,6 +95,28 @@ While we do not wish to categorically rule out future changes in this direction,
 
 On a related note, it is not strictly necessary for the sake of the added utility of implied return type to relax [dcl.fct]/11. However, much of the benefit is lost with this prohibition in place. Conversely, simply relaxing the prohibition is of significantly less benefit without the proposed implied return type feature. Accordingly, while we considered splitting the two changes into separate proposals, we have decided for now to keep them together.
 
+Another question that has come up is if something like this should be allowed:
+
+.. code:: c++
+
+  struct { int result; } foo() { ... }
+  struct { int result; } bar()
+  {
+    return foo();
+  }
+
+Under the current rules (plus relaxed [dcl.fct]/11), these two definitions have different return types which are not convertible. It is our opinion that the rules making these types different are in fact correct and desirable, and this proposal specifically does *not* include any changes which would make the types compatible. We would, however, encourage a future (orthogonal) proposal which would allow something like this:
+
+.. code:: c++
+
+  struct { int result; } bar()
+  {
+    // The '[*]' operator here causes the compiler to store the input as a
+    // temporary and generate an expression list from the unpacked members of
+    // the same; it can be used anywhere an expression list is accepted
+    return { [*]foo() };
+  }
+
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
