@@ -73,7 +73,9 @@ How does one now provide an external definition for ``foo()``? We propose:
     return { id, value };
   }
 
-The use of ``auto`` as the return type specifier, with no trailing return type, and for a function that has been previously declared with a known return type, shall instruct the compiler to define the function using the return type from the previous declaration. (Note that this works for *any* type, not just anonymous ``struct``\ s.)
+The use of ``auto`` as the return type specifier, with no trailing return type, and for a function that has been previously declared with a known return type, shall instruct the compiler to define the function using the return type from the previous declaration.
+
+Note that this works for *any* type, not just anonymous ``struct``\ s. In particular, it is equally usable for long and cumbersome template types, or even simple types (see earlier comments regarding DRY).
 
 Naturally, "previous declaration" here means a declaration having the same name and argument list. This, for example, would remain illegal:
 
@@ -88,8 +90,6 @@ Naturally, "previous declaration" here means a declaration having the same name 
     return { id, result };
   }
 
-Since this has implications with respect to return type deduction, we additionally propose an alteration to [dcl.spec.auto]/13; specifically, a previous declaration that used a placeholder type for the return type may now be redeclared or defined using a concrete type (iff the concrete type is compatible with the placeholder type). Doing so shall resolve the placeholder type to the concrete type.
-
 Additionally, and for obvious reasons, we propose to remove the prohibition ([dcl.fct]/11) against defining types in return type specifications. We additionally note that this prohibition is already not enforced by at least one major compiler (MSVC). We further believe this prohibition to be outdated; it made sense in C++98, but with recent changes such as the addition of ``decltype`` and the ability to omit the type name in a ``return`` statement returning an in-place constructed class, the reasons for the prohibition have been greatly mitigated. This other part of this proposal would largely remove any remaining motivation for the prohibition.
 
 
@@ -97,27 +97,6 @@ Proposed Wording
 ================
 
 (Proposed changes are specified relative N4567_.)
-
-Change [dcl.spec.auto]/13 (7.1.6.4.13) as follows:
-
-.. compound::
-  :class: literal-block
-
-  Redeclarations or specializations of a function or function template with a declared return type that uses a placeholder type shall :del:`also use that placeholder` :add:`use either that placeholder or a compatible concrete type`, not a deduced type. :add:`If the return type has previously been deduced, a declaration using a concrete type shall use the deduced type.`
-  [*Example:*
-
-  .. parsed-literal::
-
-    auto f();
-    auto f() { return 42; } // return type is int
-    auto f(); // OK
-    :del:`int f(); // error, cannot be overloaded with auto f()`
-    :add:`int f(); // OK, deduced type is also int`
-    decltype(auto) f(); // error, auto and decltype(auto) don't match
-
-    :add:`auto f(int);`
-    :add:`int f(int); // OK, return type of f(int) is now int`
-    :add:`float f(int); // error, redeclared with different return type`
 
 Add a new section to [dcl.spec.auto] (7.1.6.4) as follows:
 
@@ -143,6 +122,85 @@ Change [dcl.fct]/11 (8.3.5.11) as follows:
 
 Discussion
 ==========
+
+Must the declaration providing the concrete type be the first declaration?
+--------------------------------------------------------------------------
+
+This question was originally brought up by Bengt Gustafsson. Specifically, for the sake of symmetry, it seems initially desirable to allow:
+
+.. code:: c++
+
+  int foo(); // specified return type
+  auto foo() { return 42; } // return type inferred from prior declaration
+
+  auto bar(); // forward declaration, type not yet known
+  int bar(); // specify the return type as 'int'
+  auto bar() { return 0; } // return type inferred from prior declaration
+
+To that end, earlier drafts of the proposal included the following proposed change to [dcl.spec.auto]/13 (7.1.6.4.13):
+
+.. compound::
+  :class: literal-block
+
+  Redeclarations or specializations of a function or function template with a declared return type that uses a placeholder type shall :del:`also use that placeholder` :add:`use either that placeholder or a compatible concrete type`, not a deduced type. :add:`If the return type has previously been deduced, a declaration using a concrete type shall use the deduced type.`
+  [*Example:*
+
+  .. parsed-literal::
+
+    auto f();
+    auto f() { return 42; } // return type is int
+    auto f(); // OK
+    :del:`int f(); // error, cannot be overloaded with auto f()`
+    :add:`int f(); // OK, deduced type is also int`
+    decltype(auto) f(); // error, auto and decltype(auto) don't match
+
+    :add:`auto f(int);`
+    :add:`int f(int); // OK, return type of f(int) is now int`
+    :add:`float f(int); // error, redeclared with different return type`
+
+However, upon further discussion, reservations were expressed, and the general consensus seems to be that it is okay for the first declaration to "set in stone" if the return type will be known (and possibly later inferred), or deduced. Accordingly, absent the above change:
+
+.. code:: c++
+
+  auto bar();
+  int bar(); // error, violates [dcl.spec.auto]/13
+  auto bar() { return 0; } // okay, but return type is deduced, not inferred
+
+What about defining types in function pointer types?
+----------------------------------------------------
+
+An obvious consequence of relaxing [dcl.fct]/11 is the desire to permit function pointers which return an anonymous struct. For example:
+
+.. code:: c++
+
+  // Declare a function pointer type which returns an anonymous struct
+  using ReturnsAnonymousStruct = struct { int result; } (*)();
+
+  // Define a function using the same
+  int bar(ReturnsAnonymousStruct f) { return ((*f)()).result; }
+
+  // Provide a mechanism to obtain the return type of a function
+  template <typename T> struct ReturnType;
+
+  template <typename T, typename... Args>
+  struct ReturnType<T (*)(Args...)>
+  {
+      using result_t = T;
+  };
+
+  // Declare a function that is a ReturnsAnonymousStruct
+  ReturnType<ReturnsAnonymousStruct>::result_t foo() { return {0}; }
+
+  // Use the function
+  int main()
+  {
+      return bar(&foo);
+  }
+
+It is our opinion that the proposed changes are sufficient to allow the above. (In fact, this example is already accepted by both GCC and ICC (in C++11 mode even!), although it is rejected by clang per [dcl.fct]/11.) Accordingly, we feel that this proposal should be understood as intending to allow the above example and that additional wording changes to specify this behavior are not required at this time.
+
+What about defining types in parameter types?
+---------------------------------------------
 
 An obvious follow-on question is, should we also lift the prohibition against types defined in parameter specifications? There have been suggestions floated to implement the much requested named parameters in something like this manner. However, there are significant (in our opinion) reasons to not address this, at least initially. First, it is widely contested that this is not an optimal solution to the problem (named parameters) in the first place. Second, it depends on named initializers, which is an area of ongoing work. Third, this proposal works largely because C++ forbids overloading on return type, which may be leveraged to eliminate any ambiguity as to the deduction of the actual type of ``auto``; this is not the case for parameters, and so permitting ``auto`` as a parameter type specifier would quickly run into issues that can be avoided for the return type case.
 
@@ -172,6 +230,26 @@ Under the current rules (plus relaxed [dcl.fct]/11), these two definitions have 
     return { [*]foo() };
   }
 
+Conflicts with future "true" multiple return values?
+----------------------------------------------------
+
+There has been some discussion of "true" multiple return values, in particular with respect to RVO and similar issues. No doubt unpacking, if accepted, will play a part. A point that bears consideration is if moving down the path of using anonymous (or not) structs for multiple return values will "paint us into a corner" where future optimization potential is prematurely eliminated.
+
+It is our hope that these issues can be addressed with existing compound types (which will have further reaching benefit), and that it is accordingly not necessary to hold back the features here proposed in the hope of something better coming along. As is often said, perfect is the enemy of good.
+
+
+Future Directions
+=================
+
+In the Discussion_ section above, we presented a utility for extracting the return type from a function pointer type. The facility as presented has significant limitations; namely, it does not work on member functions and the several variations (e.g. CV-qualification) which apply to the same. We do not here propose a standard library implementation of this facility, which presumably would cover these cases, however there is room to imagine that such a facility could be useful, especially if the proposals we present here are adopted. (David Krauss points out that ``std::reference_wrapper`` can be used to similar effect... on *some* compilers. However, imperfect portability and the disparity between intended function and use for this result suggest that this is not the optimal facility for the problem.)
+
+Another consideration that seems likely to come up is if we should further simplify the syntax for returning multiple values (conceivably, this could apply to both anonymous structs and to ``std::pair`` / ``std::tuple``). Some have suggested allowing that the ``struct`` keyword may be omitted. In light of P0151_, we can conceive that allowing the syntax ``<int x, double y> foo()`` might be interesting. At this time, we prefer to focus on the two features here presented rather than risk overextending the reach of this proposal. However, if this proposal is accepted, it represents an obvious first step to considering such features in the future.
+
+
+Acknowledgments
+===============
+
+We wish to thank everyone on the std-proposals forum, especially Bengt Gustafsson and Tim Song, for their valuable feedback and insights.
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
