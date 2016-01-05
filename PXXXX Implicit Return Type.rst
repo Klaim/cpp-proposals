@@ -113,6 +113,25 @@ Add a new section to [dcl.spec.auto] (7.1.6.4) as follows:
 
   |--| *end example*]
 
+Add a new section to [dcl.spec.auto] (7.1.6.4) as follows:
+
+.. compound::
+  :class: literal-block block-addition
+
+  A template function redeclaration or specialization having a return type of ``auto`` shall match a previous declaration (or definition) if the first such declaration had a concrete return type. If the first such declaration also had a return type of ``auto``, the declaration using return type deduction shall be matched instead.
+  [*Example:*
+
+  .. parsed-literal::
+
+    template <typename T> T g(T t) { return t; } // #1
+    template auto g(float); // matches #1
+
+    template <typename T> auto g(T t) { return t; } // #2
+    template <typename T> T g(T t) { return t; }
+    template auto g(float); // matches #2
+
+  |--| *end example*]
+
 Change [dcl.fct]/11 (8.3.5.11) as follows:
 
 .. compound::
@@ -120,8 +139,21 @@ Change [dcl.fct]/11 (8.3.5.11) as follows:
 
   Types shall not be defined in :del:`return or` parameter types.
 
+
 Discussion
 ==========
+
+What about template return types?
+---------------------------------
+
+In C++14, the following code is legal and produces two distinct templates:
+
+.. code:: c++
+
+  template <class T> int foo();
+  template <class T> auto foo();
+
+This obviously conflicts with the proposed feature. After discussion on ``std-proposals``, it was decided that the proposed feature should take precedence in this case. It should also be noted that it is unclear how, or even if, the second function can be invoked according to the current rules of the language. (To this end, it may be desirable to simply forbid the opposite ordering. However, we feel that this would be better addressed separately, perhaps even as a DR.)
 
 Must the declaration providing the concrete type be the first declaration?
 --------------------------------------------------------------------------
@@ -249,12 +281,12 @@ Another consideration that seems likely to come up is if we should further simpl
 Acknowledgments
 ===============
 
-We wish to thank everyone on the std-proposals forum, especially Bengt Gustafsson and Tim Song, for their valuable feedback and insights.
+We wish to thank everyone on the ``std-proposals`` forum, especially Bengt Gustafsson and Tim Song, for their valuable feedback and insights.
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
-.. _N4567: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
 .. _N4560: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
+.. _N4567: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
 .. _P0144: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
 .. _P0151: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0151r0.pdf
 
