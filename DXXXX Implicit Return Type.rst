@@ -2,8 +2,10 @@
   Implicit Return Type
 ========================
 
-:Document:  PXXXX (TBD)
+:Document:  DXXXX (TBD)
 :Date:      2015-12-31
+:Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
+:Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
 
 .. raw:: html
@@ -283,11 +285,34 @@ Acknowledgments
 
 We wish to thank everyone on the ``std-proposals`` forum, especially Bengt Gustafsson and Tim Song, for their valuable feedback and insights.
 
-.. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
+
+References
+==========
+
+.. _N4567: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
+
+* N4567_ Working Draft, Standard for Programming Language C++
+
+  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
 
 .. _N4560: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
-.. _N4567: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
+
+* N4560_ Extensions for Ranges
+
+  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
+
 .. _P0144: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
+
+* P0144_ Structured Bindings
+
+  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0144r0.pdf
+
 .. _P0151: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0151r0.pdf
+
+* P0151_ Proposal of Multi-Declarators (aka Structured Bindings)
+
+  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0151r0.pdf
+
+.. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
 .. |--| unicode:: U+02014 .. em dash
