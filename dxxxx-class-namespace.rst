@@ -249,3 +249,5 @@ References
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
 .. |--| unicode:: U+02014 .. em dash
+
+.. kate: hl reStructuredText
