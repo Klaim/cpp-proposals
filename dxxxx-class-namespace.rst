@@ -1,9 +1,19 @@
 ===================
   Class Namespace
 ===================
-~~~~~~~~~~~~~~~~~~~
- November 23, 2015
-~~~~~~~~~~~~~~~~~~~
+
+:Document:  DXXXX (TBD)
+:Date:      2016-01-26
+:Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
+:Audience:  Evolution Working Group
+:Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
+
+.. raw:: html
+
+  <style>
+    html { color: black; background: white; }
+    table.docinfo { margin: 2em 0; }
+  </style>
 
 .. role:: cpp(code)
    :language: c++
@@ -226,6 +236,16 @@ Acknowledgments
 
 This proposal is a continuation of N1420_ by Carl Daniel. It was originally written prior to the author's discovery of N1420. The original feature request that spawned this new proposal comes from John Yates. Miro Knejp and Péter Radics contributed valuable suggestions. Other contemporary participants include Larry Evans, Russell Greene, Bjorn Reese, Evan Teran and Andrew Tomazos. (The author also acknowledges prior discussion of a very similar feature: see https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/uHjx6YR_EnQJ and https://groups.google.com/a/isocpp.org/d/msg/std-proposals/xukd1mgd21I/gh5W0KS856oJ.)
 
+
+References
+==========
+
 .. _N1420: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2003/n1420.pdf
+
+* N1420_ Class Namespaces
+
+  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2003/n1420.pdf
+
+.. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
 .. |--| unicode:: U+02014 .. em dash
