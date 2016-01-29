@@ -134,7 +134,7 @@ Some consequences of the scope acting simply as a name transformation should be 
 
 Additionally:
 
-- :cpp:`namespace struct` and :cpp:`namespace class` shall be equivalent and interchangeable. (In general, the use of "class" throughout should be understood to mean either a :cpp:`class` or :cpp:`struct`.)
+- While :cpp:`namespace class` is being used for illustrative purposes, :cpp:`namespace struct` and :cpp:`namespace union` shall also be permitted, and shall provide equivalent function. (In general, the use of "class" throughout should be understood to mean any class-type.)
 - Use of a class name scope requires that the named class has been defined. Forward declaration is not sufficient.
 - Nested class name scopes are permitted.
 - Any members that may legally be defined using their qualified name may be defined within a class name scope. This includes member types, member functions, and static member variables.
@@ -161,7 +161,13 @@ The most straight forward way in which to describe this feature is with a syntax
 
   *[<template_specification>]* *[<type>]* *<name>*\ **::**\ *<member_name><...>*
 
-...for each *<member_name>* in the scope. Rules for interpretation of members within a class name scope, and for what sorts of code is permitted or ill-formed, may all be derived directly from this transformation.
+...for each *<member_name>* in the scope. Rules for interpretation of members within a class name scope, and for what sorts of code is permitted or ill-formed, may all be derived directly from this transformation. Type resolution for the return type (where applicable) shall proceed according to the same rules that would apply within the class definition.
+
+
+Interactions
+============
+
+The token sequences :cpp:`namespace class`, :cpp:`namespace struct` and :cpp:`namespace union` are currently ill-formed, so no existing code would be affected by this proposal. This proposal does not make any changes to other existing language or library features (although implementations would be free to make use of it in their standard library implementations, should they desire to do so).
 
 
 Additional Examples
