@@ -3,7 +3,7 @@
 ===================
 
 :Document:  DXXXX (TBD)
-:Date:      2016-01-26
+:Date:      2016-02-04
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -49,7 +49,7 @@ The problem that arises is the necessity to repeat a long prefix for all definit
 .. code:: c++
 
   template <typename CharType, typename Traits, typename Allocator>
-  MyString<CharType, Traits, Allocator>::MyString
+  MyString<CharType, Traits, Allocator>::MyString(...)
   { ... }
 
 This repetition increases the space over which accidental errors may be introduced, and increases the work required for refactoring. The problem is compounded for templates within templates.
@@ -110,9 +110,9 @@ The effect of this scope is to treat each member definition (variable or method)
   A::Enum A::foo(...) { ... }
   int A::value = ...;
 
-  template <typename T> B<T>::B(...) { ... }
+  template <typename T> B<T>::B(...) { struct SubB { ... }; ... }
   template <typename T> B<T>& B<T>::operator=(B<T> const& other) { ... }
-  template <typename T> void B<T>::bar(...) { ... }
+  template <typename T> SubB B<T>::bar(...) { ... }
 
   // Proposed syntax
   namespace class A {
@@ -125,7 +125,7 @@ The effect of this scope is to treat each member definition (variable or method)
   namespace class B {
     B(...) { ... }
     B& operator=(B const& other) { ... }
-    void bar(...) { ... }
+    SubB bar(...) { ... }
   }
 
 Following the introduction of the scope (i.e. the keywords :cpp:`namespace class`), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of :cpp:`Enum` without the :cpp:`B::` qualifier). (These rules should be applied in the same manner as for a class definition. Note that this only affects non-trailing return types, as other types already use the class scope for type resolution.)
