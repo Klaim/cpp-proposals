@@ -1,9 +1,9 @@
-========================
-  Implicit Return Type
-========================
+===============================================
+  Allowing Anonymous Structs as Return Values
+===============================================
 
 :Document:  DXXXX (TBD)
-:Date:      2016-01-29
+:Date:      2016-02-04
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
