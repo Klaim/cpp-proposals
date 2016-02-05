@@ -2,7 +2,7 @@
   Class Namespace
 ===================
 
-:Document:  DXXXX (TBD)
+:Document:  D0223R0
 :Date:      2016-02-04
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group

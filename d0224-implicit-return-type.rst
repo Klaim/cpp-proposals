@@ -2,7 +2,7 @@
   Implicit Return Type
 ========================
 
-:Document:  DXXXX (TBD)
+:Document:  D0224R0
 :Date:      2016-01-29
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group

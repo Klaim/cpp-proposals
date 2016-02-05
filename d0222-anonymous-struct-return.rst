@@ -2,7 +2,7 @@
   Allowing Anonymous Structs as Return Values
 ===============================================
 
-:Document:  DXXXX (TBD)
+:Document:  D0222R0
 :Date:      2016-02-04
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
@@ -29,7 +29,7 @@
 Abstract
 ========
 
-This proposal recommends the relaxing of [dcl.fct]/11; specifically, the prohibition of defining (anonymous) types as return values. This proposal is considered contingent on DXXXX_, as obvious problems otherwise arise.
+This proposal recommends the relaxing of [dcl.fct]/11; specifically, the prohibition of defining (anonymous) types as return values. This proposal is considered contingent on P0224_, as obvious problems otherwise arise.
 
 (Note: references made to the existing draft standard are made against N4567_.)
 
@@ -45,20 +45,20 @@ Proposals such as P0144_ in particular represent a significant step toward suppo
 
 It has been suggested on multiple occasions that the optimal solution to the above issues is to return an anonymous ``struct``. This solves the problems of clutter and self-documentation, but runs afoul of a much worse issue; because the ``struct`` is *anonymous*, it can be difficult to impossible to give its name a second time in order to separate the declaration and definition of the function that wishes to use it.
 
-The discussion on this topic lead to an interesting question, which is addressed in DXXXX_: **why is it necessary to repeat the return value at all?** If DXXXX_ is accepted, the problem of naming the return type is immediately eliminated, and along with it, a major reason why returning anonymous ``struct``\ s is not currently permitted.
+The discussion on this topic lead to an interesting question, which is addressed in P0224_: **why is it necessary to repeat the return value at all?** If P0224_ is accepted, the problem of naming the return type is immediately eliminated, and along with it, a major reason why returning anonymous ``struct``\ s is not currently permitted.
 
 
 Proposal
 ========
 
-The use of ``auto`` to indicate an *inferred* return type (as proposed by DXXXX_) provides an optimal solution to the following problem:
+The use of ``auto`` to indicate an *inferred* return type (as proposed by P0224_) provides an optimal solution to the following problem:
 
 .. code:: c++
 
   // foo.h
   struct { int id; double value; } foo();
 
-How does one now provide an external definition for ``foo()``? With DXXXX_, the solution is simple:
+How does one now provide an external definition for ``foo()``? With P0224_, the solution is simple:
 
 .. code:: c++
 
@@ -69,7 +69,7 @@ How does one now provide an external definition for ``foo()``? With DXXXX_, the 
     return { id, value };
   }
 
-Recent and proposed changes in C++ significantly mitigate the reasons to prohibit an anonymous struct defined as a return type. Constructing the return result is a non-issue, since the type name may now be elided, and the combination of ``auto`` variable declarations, ``decltype``, and DXXXX_, permit implicit naming of the type where necessary. In short, the prohibition ([dcl.fct]/11) against defining types in return type specifications has become largely an artificial and arbitrary restriction which we propose to remove.
+Recent and proposed changes in C++ significantly mitigate the reasons to prohibit an anonymous struct defined as a return type. Constructing the return result is a non-issue, since the type name may now be elided, and the combination of ``auto`` variable declarations, ``decltype``, and P0224_, permit implicit naming of the type where necessary. In short, the prohibition ([dcl.fct]/11) against defining types in return type specifications has become largely an artificial and arbitrary restriction which we propose to remove.
 
 We additionally note that this prohibition is already not enforced by at least one major compiler (MSVC), and is enforced sporadically in others (see `What about defining types in function pointer types?`_).
 
@@ -242,6 +242,12 @@ References
 * P0197_ Default Tuple-like Access
 
   http://wg21.link/p0197
+
+.. _P0224: http://wg21.link/p0224
+
+* P0224_ Implicit Return Type
+
+  http://wg21.link/p0224
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
