@@ -3,7 +3,7 @@
 ========================
 
 :Document:  D0224R0
-:Date:      2016-01-29
+:Date:      2016-02-05
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -117,6 +117,22 @@ This proposal does not make any changes to other existing language or library fe
 
 Discussion
 ==========
+
+Is this feature dangerous?
+--------------------------
+
+Moritz Klammler noted that the effect of the following code may be unexpected:
+
+.. code:: c++
+
+  float foo();
+  auto foo() { return 42.0; }
+
+If the declaration and definition are in different source files, it can appear that the return type of ``foo()`` is ``double`` (deduced), when under this proposal, it is in fact ``float`` (inferred).
+
+In practice, we don't expect this to be a serious issue. The above example is overly simplified, to the point that we would not expect this feature to be used in such an instance (and even if so, compilers provide warnings for such conversions). In the same manner, modern C++ is more strict about potentially dangerous implicit conversions; in the case of modern ``return`` statements using type-elided braced initializers, an unsafe construct in a context like that presented would not be allowed.
+
+Nevertheless, one way of addressing this problem would be to use some other syntax; either using something other than ``auto`` to request return type inference, or by adding (optional) syntax (e.g. a new contextual keyword) following the parameter list. While we do not oppose such alternatives, they delve into the well known challenge of Naming Things. A trailing contextual keyword |--| perhaps ``inferred_return`` |--| seems the only solution that does not risk invalidating existing code.
 
 What about template return types?
 ---------------------------------
