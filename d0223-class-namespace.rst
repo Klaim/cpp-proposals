@@ -3,7 +3,7 @@
 ===================
 
 :Document:  D0223R0
-:Date:      2016-02-04
+:Date:      2016-02-09
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -101,34 +101,34 @@ The effect of this scope is to treat each member definition (variable or method)
 .. code:: c++
 
   // Declarations
-  class A { ... };
+  class Part { enum Type { ... }; ... };
 
-  template <typename T> class B { ... };
+  template <typename T> class List { ... };
 
   // Existing syntax
-  A::A(...) { ... }
-  A::Enum A::foo(...) { ... }
-  int A::value = ...;
+  Part::Part(...) { ... }
+  Part::Type Part::type(...) { ... }
+  int Part::radius = ...;
 
-  template <typename T> B<T>::B(...) { struct SubB { ... }; ... }
-  template <typename T> B<T>& B<T>::operator=(B<T> const& other) { ... }
-  template <typename T> SubB B<T>::bar(...) { ... }
+  template <typename T> List<T>::List(...) { struct iterator { ... }; ... }
+  template <typename T> List<T>& List<T>::operator=(List<T> const& other) { ... }
+  template <typename T> typename List<T>::iterator List<T>::find(...) { ... }
 
   // Proposed syntax
-  namespace class A {
-    A(...) { ... }
-    Enum foo() { ... }
-    int value = ...;
+  namespace class Part {
+    Part(...) { ... }
+    Type type() { ... }
+    int radius = ...;
   }
 
   template <typename T>
-  namespace class B {
-    B(...) { ... }
-    B& operator=(B const& other) { ... }
-    SubB bar(...) { ... }
+  namespace class List {
+    List(...) { ... }
+    List& operator=(List const& other) { ... }
+    iterator find(...) { ... }
   }
 
-Following the introduction of the scope (i.e. the keywords :cpp:`namespace class`), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of :cpp:`Enum` without the :cpp:`B::` qualifier). (These rules should be applied in the same manner as for a class definition. Note that this only affects non-trailing return types, as other types already use the class scope for type resolution.)
+Following the introduction of the scope (i.e. the keywords :cpp:`namespace class`), the template parameters shall be implicitly applied to the class name and any subsequent mention of the class name that does not have an explicit argument list. It shall be an error to provide an argument list for the introducing class name except in the case of specialization. Type name look-up within the scope shall additionally consider the class scope first (note in the above example the use of :cpp:`Type` without the :cpp:`Part::` qualifier). (These rules should be applied in the same manner as for a class definition. Note that this only affects non-trailing return types, as other types already use the class scope for type resolution.)
 
 Some consequences of the scope acting simply as a name transformation should be noted. First, such a scope can be "opened" on the same class name any number of times. Second, definitions in a class name scope may be mixed with traditional, fully qualified definitions (provided that no definitions are duplicated, as always). Third, an empty scope is permissible as long as the named class is recognized. Last, but perhaps most important, the scope does not permit the addition of members not present in the class definition, nor in general does it allow the user to accomplish anything that could not be accomplished otherwise.
 
