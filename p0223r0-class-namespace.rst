@@ -2,7 +2,7 @@
   Class Namespace
 ===================
 
-:Document:  D0223R0
+:Document:  P0223R0
 :Date:      2016-02-09
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group

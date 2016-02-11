@@ -2,8 +2,8 @@
   Allowing Anonymous Structs as Return Values
 ===============================================
 
-:Document:  D0222R0
-:Date:      2016-02-04
+:Document:  P0222R0
+:Date:      2016-02-05
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
