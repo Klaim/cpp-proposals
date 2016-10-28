@@ -3,7 +3,7 @@ DOCUMENTS = \
   p0223r0-class-namespace.html \
   p0224r0-implicit-return-type.html \
   p0311r0-tuple-like-unified-vision.html \
-  dxxxx-pragma-once.html
+  dxxxx-preprocessor-once.html
 
 %.html: %.rst
 	rst2html "$<" "$@"
