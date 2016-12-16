@@ -3,6 +3,9 @@ DOCUMENTS = \
   p0223r0-class-namespace.html \
   p0224r0-implicit-return-type.html \
   p0311r0-tuple-like-unified-vision.html \
+  dxxxx-generalized-unpacking.html \
+  dxxxx-implicit-return-and-anonymous-structs.html \
+  dxxxx-instantiation-attributes.html \
   dxxxx-preprocessor-once.html
 
 %.html: %.rst
