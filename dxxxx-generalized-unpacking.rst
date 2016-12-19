@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  Dxxxx
-:Date:      2016-12-16
+:Date:      2016-12-19
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -275,6 +275,11 @@ Although this is feasible, and would ideally optimize down to a direct call of t
 
 Discussion
 ==========
+
+What is a "product type"?
+-------------------------
+
+This is an excellent question which deserves its own paper. P0327_ makes a good start. When we get to the point of specifying wording, this will need to be addressed; ideally, this will have happened in parallel. Some "working definitions" which may be used to help with consideration of this proposal are "types which define :cpp:`tuple_size` and :cpp:`get`", or "types to which 'structured binding' / 'assignment unpacking' may be applied".
 
 Why combine these features?
 ---------------------------

@@ -3,7 +3,7 @@
 ======================================================================
 
 :Document:  DXXXXR0
-:Date:      2016-12-16
+:Date:      2016-12-19
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -48,11 +48,13 @@ While both these features have use on their own, they are nevertheless related, 
 Proposal
 ========
 
-We propose, first, to remove the restriction against anonymous types as return values:
+We propose, first, to remove the restriction against (anonymous) types as return values:
 
 .. code:: c++
 
   struct { int id; double value; } foo() { ... }
+
+We believe this can be accomplished largely by simply removing the prohibition in [dcl.fct]/11.
 
 Second, we propose the addition of :cpp:`decltype(return)` to name |--| in a function signature |--| the return type of a previously declared function. This is consistent with recent changes to the language that have progressively relaxed the requirements for how return types are specified, and provides an optimal solution to the following problem:
 
@@ -93,19 +95,73 @@ We additionally note that this prohibition is already not enforced by at least o
 Interactions
 ============
 
-Definition of an anonymous class-type as a return value type is currently ill-formed (although not universally enforced by existing major compilers), and the token sequence :cpp:`decltype(return)` is currently ill-formed. Accordingly, this change will not affect existing and conforming code, and may cause existing but non-conforming code to become conforming. This proposal does not make any changes to other existing language or library features; while conceivable that some library methods might benefit from the feature, such changes are potentially breaking, and no such changes are proposed at this time.
+Definition of a class-type as a return value type is currently ill-formed (although not universally enforced by existing major compilers), and the token sequence :cpp:`decltype(return)` is currently ill-formed. Accordingly, this change will not affect existing and conforming code, and may cause existing but non-conforming code to become conforming. This proposal does not make any changes to other existing language or library features; while conceivable that some library methods might benefit from the feature, such changes are potentially breaking, and no such changes are proposed at this time.
 
 
 Implementation and Existing Practice
 ====================================
 
-The proposed feature to allow anonymous types as return values is at least already partly implemented by MSVC and (to a lesser extend) GCC and ICC. The curious, partial support in GCC and ICC (see `What about defining types in function pointer types?`_) suggests that the existing prohibition may already be largely artificial, and that removing it would accordingly be a simple matter.
+The proposed feature to allow types as return values is at least already partly implemented by MSVC and (to a lesser extend) GCC and ICC. The curious, partial support in GCC and ICC (see `What about defining types in function pointer types?`_) suggests that the existing prohibition may already be largely artificial, and that removing it would accordingly be a simple matter.
 
 The proposed feature to allow :cpp:`decltype(return)` to name the return value has not, to our knowledge, been implemented, but given that compilers must already compare the return value when confronted with an initial declaration followed by subsequent redeclarations and/or a definition, we do not anticipate any implementation difficulties.
 
 
 Discussion
 ==========
+
+Can't we do this already?
+-------------------------
+
+Astute observers may note that this is already legal (as of C++14):
+
+.. code:: c++
+
+  auto f()
+  {
+    struct { int x, y; } result;
+    // set values of result
+    return result;
+  }
+
+The critical problem with this, which we wish specifically to address, is that a forward declaration of such a function is not possible. We would see this as further justification for relaxing the existing prohibition, as proposed.
+
+Should we allow *named* types defined as return types?
+------------------------------------------------------
+
+Allowing both named and anonymous types is a logical consequence of simply lifting the existing [dcl.fct]/11 prohibition as it is currently stated. It is also consistent, and already supported by MSVC:
+
+.. code:: c++
+
+  // Equivalent to struct S { ... }; S foo();
+  struct S { ... } foo();
+
+That said, the value here is less obvious, and we would find it acceptable to permit definition of only anonymous types as return types.
+
+Isn't template parsing difficult?
+---------------------------------
+
+Arthur O'Dwyer pointed out this interesting example:
+
+.. code:: c++
+
+  template<class T>
+  struct {
+      size_t s;
+  } // Declaring a templated type, right?
+  what_size(T t) {
+      return {sizeof(t)};
+  }
+
+It isn't obvious to the compiler, and not especially obvious to readers either, that this is a declaration of a templated function returning an anonymous type. Moreover, while the type itself is not templated, per-se, in effect it is, because (presumably?) each different instantiation of the function will have a distinct return type.
+
+Since the primary motivation for this feature is for forward declarations of functions (per previous question, returning anonymous types is already possible with deduced return type), there are fewer use cases for the feature in conjunction with templated functions. As such, an easy cop-out is to retain the prohibition in these cases; we can always decide to lift it later.
+
+An alternative (which may be worth considering for all cases) is to permit anonymous types only in trailing return type specifications, as follows:
+
+.. code:: c++
+
+  auto foo -> struct { ... };
+  template<...> auto bar -> struct { ... };
 
 Is :cpp:`decltype(return)` dangerous?
 -------------------------------------
@@ -176,8 +232,8 @@ Under the current rules (plus relaxed [dcl.fct]/11), these two definitions have 
     return { [:]foo()... };
   }
 
-Conflicts with future "true" multiple return values?
-----------------------------------------------------
+Does this conflicts with future "true" multiple return values?
+--------------------------------------------------------------
 
 There has been some discussion of "true" multiple return values, in particular with respect to RVO and similar issues. In particular, some features proposed by P0341_ are very much in this vein. A point that bears consideration is if moving down the path of using anonymous (or not) structs for multiple return values will "paint us into a corner" where future optimization potential is prematurely eliminated.
 
@@ -186,7 +242,7 @@ It is our hope that these issues can be addressed with existing compound types (
 What about deduced return types?
 --------------------------------
 
-This feature is not compatible with deduced return types at this time. If designated initializers are ever accepted, it might be possible to lift this restriction:
+This feature is not compatible with deduced return types at this time. In light of P0329_, it might be possible to lift this restriction:
 
 .. code:: c++
 
@@ -211,19 +267,17 @@ A final consideration is the extension of :cpp:`decltype(return)` to allow use w
 Acknowledgments
 ===============
 
-We wish to thank everyone on the ``std-proposals`` forum, especially Bengt Gustafsson and Tim Song, for their valuable feedback and insights.
+We wish to thank everyone on the ``std-proposals`` forum, especially Bengt Gustafsson, Arthur O'Dwyer and R. "Tim" Song, for their valuable feedback and insights.
 
 
 References
 ==========
 
-.. FIXME current draft, and also check references to spec
+.. _N4618: http://wg21.link/n4618
 
-.. _N4567: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
+* N4618_ Working Draft, Standard for Programming Language C++
 
-* N4567_ Working Draft, Standard for Programming Language C++
-
-  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4567.pdf
+  http://wg21.link/n4618
 
 .. _N4560: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
 
@@ -254,6 +308,12 @@ References
 * P0224_ Implicit Return Type
 
   http://wg21.link/p0224
+
+.. _P0329: http://wg21.link/p0329
+
+* P0329_ Designated Initializer Wording
+
+  http://wg21.link/p0329
 
 .. _P0341: http://wg21.link/p0341
 
