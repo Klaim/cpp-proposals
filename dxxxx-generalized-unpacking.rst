@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  Dxxxx
-:Date:      2016-12-19
+:Date:      2017-01-05
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -13,11 +13,26 @@
   <style>
     html { color: black; background: white; }
     table.docinfo { margin: 2em 0; }
+    .lit { font-weight: bold; }
+    .var { font-style: italic; }
+    .var::before { font-style: normal; content: "<"; }
+    .var::after { font-style: normal; content: ">"; }
+    .optvar { font-style: italic; }
+    .optvar::before { font-style: normal; content: "[<"; }
+    .optvar::after { font-style: normal; content: ">]"; }
   </style>
 
 .. role:: cpp(code)
    :language: c++
 
+.. role:: lit(code)
+    :class: lit
+
+.. role:: var(code)
+    :class: var
+
+.. role:: optvar(code)
+    :class: optvar
 
 Abstract
 ========
@@ -51,11 +66,11 @@ We present our proposal in two parts. First, we present the proposed syntax and 
 Parameter Pack Slicing
 ----------------------
 
-We propose to introduce a new prefix operator, ```[` <slicing_expression> `]```, which may be applied to an expression producing a parameter pack. The syntax of ``<slicing_expression>`` shall be one of ``<index>`` or ``[<index>] `:` [<index>]``, where each ``<index>`` is a :cpp:`constexpr` of integer type. For the purposes of the following specification, also let ``<pack_expression>`` be the operand of the slicing expression.
+We propose to introduce a new prefix operator, :lit:`[`\ :var:`slicing_expression`\ :lit:`]`, which may be applied to an expression producing a parameter pack. The syntax of :var:`slicing_expression` shall be one of :var:`index` or :optvar:`index`\ :lit:`:`\ :optvar:`index`, where each :var:`index` is a :cpp:`constexpr` of integer type. For the purposes of the following specification, also let :var:`pack_expression` be the operand of the slicing expression.
 
-The first form shall select a *single* element of a pack, and shall yield this value as a single value (i.e. not as a new pack). For example, the expression :cpp:`[1]pack` shall yield the second value of the parameter pack :cpp:`pack`. If the ``<index>`` is negative, it shall first be added to :cpp:`sizeof...(<pack_expression>)`. If the index (after the preceding step, if applicable) is out of bounds, the expression shall be ill-formed.
+The first form shall select a *single* element of a pack, and shall yield this value as a single value (i.e. not as a new pack). For example, the expression :cpp:`[1]pack` shall yield the second value of the parameter pack :cpp:`pack`. If the :var:`index` is negative, it shall first be added to :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`. If the index (after the preceding step, if applicable) is out of bounds, the expression shall be ill-formed.
 
-The second form shall return a *variable* slice of the parameter pack, and shall yield this value as a new parameter pack. Both indices are optional and may be omitted. The first ``<index>`` shall specify the index of the first pack element to yield. If omitted, the value :cpp:`0` shall be assumed. The second ``<index>`` shall specify the *upper bound* on the indices to be yielded, meaning that the specified index is *not* included. If omitted, the value :cpp:`sizeof...(<pack_expression>)` shall be assumed. If either value is negative, it shall first be added to :cpp:`sizeof...(<pack_expression>)`. Each value shall then be clamped to the range [\ :cpp:`0`, :cpp:`sizeof...(<pack_expression>)`]. If, after normalization and clamping, the upper index is less than the lower index, an empty parameter pack shall be yielded. (Note that this means that a variable slice is never ill-formed due to out of bounds index values.)
+The second form shall return a *variable* slice of the parameter pack, and shall yield this value as a new parameter pack. Both indices are optional and may be omitted. The first :var:`index` shall specify the index of the first pack element to yield. If omitted, the value :cpp:`0` shall be assumed. The second :var:`index` shall specify the *upper bound* on the indices to be yielded, meaning that the specified index is *not* included. If omitted, the value :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)` shall be assumed. If either value is negative, it shall first be added to :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`. Each value shall then be clamped to the range [\ :cpp:`0`, :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`]. If, after normalization and clamping, the upper index is less than the lower index, an empty parameter pack shall be yielded. (Note that this means that a variable slice is never ill-formed due to out of bounds index values.)
 
 This can be represented in pseudo-code::
 
@@ -97,19 +112,20 @@ This makes possible uses like the following, which are not readily accomplished 
 .. code:: c++
 
   // let a1..a9 be single values
-  // let t1, t2 be tuple-like
+  // let t1, t2 be product types ("tuple-like")
 
   auto x = SomeType(a1, [:]t1..., [3:]t2..., a2);
   foo([1:]t1..., a3, [0]t1);
 
-  // let v be a vector-like type of T that may or may not be an array, e.g.:
+  // let v1, v2 be vector-like types of T that may or may not be an array, e.g.:
   //   std::array<int, N>
   //   Eigen::Vector3d
   //   QPoint
   //   struct Point { int x, y; }
 
-  auto manhattan_distance d = std::abs([:]v) + ...;
-  auto dot = [:]v * ...;
+  auto manhattan_length = std::abs([:]v1) + ...;
+  auto manhattan_distance = std::abs([:]v1 - [:]v2) + ...;
+  auto dot = ([:]v1 * [:]v2) + ...;
 
 Note also an important implication of both the above code and many of the examples to follow; namely, that we assign the slicing/unpacking operator (prefix :cpp:`operator[]`) higher precedence than fold operator (postfix :cpp:`operator...`).
 
@@ -243,16 +259,30 @@ For the last example, we assume an extension to :cpp:`std::apply` to accept mult
 
 Although this is effective, at least for the above examples, pack generators would provide a better solution for this and other more complicated problems. See `Future Direction`_ for further discussion.
 
+Slicing Product Types
+---------------------
+
+It's harder to imagine generic uses for slicing product types, since product types come in so very many varieties. However, we have already alluded to the case of rearranging elements in a product type as one possible use. Another likely use case deals with linear algebra and geometry, particularly operations dealing with homogeneous vectors. Let us consider the simple example of converting a homogeneous vector to a normalized vector. Such an operation would normally be written out "longhand", and would be difficult to adapt to vectors of arbitrary dimension. Our proposed feature allows us to write a simple and succinct implementation:
+
+.. code:: c++
+
+  template <typename T, size_t N>
+  std::array<T, N-1> normalize(std::array<T, N> a)
+  {
+    return {[:-1]a / [-1]a...};
+  }
+
 Improving :cpp:`std::apply`
 ---------------------------
 
-The previous example postulated an extension to :cpp:`std::apply` to accept multiple product types. While this can of course be achieved already using :cpp:`std::tuple_cat`, this requires a temporary object and making copies of the values that will eventually be passed as parameters. The postulated extension should be able to avoid these problems. Using our proposed feature, we can show how this might be implemented:
+The previous example postulated an extension to :cpp:`std::apply` to accept multiple product types. While this can of course be achieved already using :cpp:`std::tuple_cat`, avoiding unnecessary copies and/or temporary objects is awkward at best. The postulated extension should be able to avoid these problems. Using our proposed feature, we can show (forwarding omitted for brevity) how this might be implemented:
 
 .. code:: c++
 
   namespace std
   {
-    apply_helper<int n>(auto func, auto... args)
+    template <int n, typename Func, typename Args...>
+    auto apply_helper(Func func, Args... args)
     {
       // n is number of already-unpacked arguments
       constexpr auto r = sizeof...(args) - n; // remaining tuples
@@ -264,13 +294,14 @@ The previous example postulated an extension to :cpp:`std::apply` to accept mult
       return apply_helper<n + k>(func, [:n]args, [:]t..., [n+1:]args);
     }
 
-    apply(auto func, auto... tuples)
+    template <typename Func, typename Tuples...>
+    auto apply(Func func, Tuples... tuples)
     {
       return apply_helper<0>(func, tuples);
     }
   }
 
-Although this is feasible, and would ideally optimize down to a direct call of the specified function with all of the tuple values extracted directly, we would again note that pack generators would offer an even better solution to this problem.
+Although this is feasible, and would ideally optimize down to a direct call of the specified function with all of the tuple values extracted directly, it is not meant to imply that this is the only possible solution, nor necessarily even the *best* solution. In particular, we would again note that pack generators would offer an even better solution to this specific problem. Rather, this example is intended to show how our proposed feature allows tail-recursive unpacking of multiple product types; in particular, without using a new tuple to wrap the values as they are unpacked.
 
 
 Discussion
@@ -307,6 +338,34 @@ Does this make :cpp:`std::apply` (and :cpp:`std::make_from_tuple`) obsolete?
 No. There will almost certainly remain cases where :cpp:`std::apply` and/or :cpp:`std::make_from_tuple` are useful; for example, when using the operation as a functor that gets passed as an argument, or when expansions are nested. In fact, we use :cpp:`std::apply` in at least one of the preceding examples *in conjunction with* our proposed feature.
 
 That said, we do expect that *most* uses of :cpp:`std::apply` and :cpp:`std::make_from_tuple` can be replaced with the use of this feature.
+
+Are "dead" access to product type value elided?
+-----------------------------------------------
+
+Consider the following code:
+
+.. code:: c++
+
+  // let t be a product type ("tuple-like") of size 3
+  auto x = [1]t;
+
+What code is actually generated by the above?
+
+.. code:: c++
+
+  // option 1
+  [[maybe_unused]] get<0>(t);
+  auto x = get<1>(t);
+  [[maybe_unused]] get<2>(t);
+
+  // option 2
+  auto x = get<1>(t);
+
+In most cases, the question should be irrelevant; the compiler will eliminate the superfluous calls to :cpp:`get` as accomplishing nothing. However, if :cpp:`get` has side effects (however much we might be inclined to consider that poor design), this could matter.
+
+Certainly in the above example, we believe that the compiler should elide the "superfluous" value accesses, as this feels like the most natural consequence of combining the unpacking and slicing operations. A more interesting question, which we believe should be open to committee input, is what to do if slicing and unpacking are explicitly separated, as in :cpp:`[1][:]t`. While our inclination is that this form should be exactly equivalent to :cpp:`[1]t`, an argument could be made that writing out the operations separately implies that the programmer intends for each value of :cpp:`t` to be accessed, with any resulting side effects incurred, before reducing the resulting parameter pack to only the value at index ``1``.
+
+If we consider an initializer list to be a product type, conceivably a user desiring side effects could obtain them by writing :cpp:`[1]{[:]t...}`, which makes the intent to evaluate all values of :cpp:`t` prior to selecting a single value even more explicit.
 
 What about ambiguity with lambda captures?
 ------------------------------------------
@@ -398,7 +457,7 @@ Generalized unpacking provides a much better solution:
       getOuttaHere();
   }
 
-The return type of :cpp:`calculateTargetCoordinates` is a regular type, and we can call :cpp:`distanceFromMe` on any product type value that can convert (or be sliced) to a pair of :cpp:`double`s.
+The return type of :cpp:`calculateTargetCoordinates` is a regular type, and we can call :cpp:`distanceFromMe` on any product type value that can convert (or be sliced) to a pair of :cpp:`double`\ s.
 
 
 Future Direction

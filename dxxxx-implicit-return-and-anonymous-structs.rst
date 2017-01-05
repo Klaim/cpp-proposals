@@ -3,7 +3,7 @@
 ======================================================================
 
 :Document:  DXXXXR0
-:Date:      2016-12-19
+:Date:      2017-01-05
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -40,7 +40,7 @@ It has been suggested on multiple occasions that the optimal solution to the abo
 
 Even in the case of return types that can be named, it may be that repeating the type name is excessively verbose or otherwise undesirable. Some might even call this a violation of the `Don't Repeat Yourself <https://en.wikipedia.org/wiki/Don't_repeat_yourself>`_ principle, similar to some of the issues that ``auto`` for variable declaration was introduced to solve. (On the flip side, one could see the ability to elide the return type as subject to many abuses, again in much the manner of ``auto``. However, many language features can be abused; this should not prevent the addition of a feature that would provide an important benefit when used correctly.)
 
-While it is already possible in simple cases to use :cpp:`decltype` and a sample invocation of the function, this is needlessly verbose, and as the argument list grows longer and/or gains arguments for which providing a legal value is non-trivial, it can quickly become unwieldy and unfeasible.
+While it is already possible in simple cases to use :cpp:`decltype` and a sample invocation of the function, this is needlessly verbose, and as the argument list grows longer, it can quickly become unwieldy.
 
 While both these features have use on their own, they are nevertheless related, and we believe that presenting them together makes sense, and strengthens the case for each.
 
@@ -123,7 +123,7 @@ Astute observers may note that this is already legal (as of C++14):
     return result;
   }
 
-The critical problem with this, which we wish specifically to address, is that a forward declaration of such a function is not possible. We would see this as further justification for relaxing the existing prohibition, as proposed.
+The critical problem with this, which we wish specifically to address, is that a (useful) forward declaration of such a function is not possible. We would see this as further justification for relaxing the existing prohibition, as proposed. (By "useful", we mean particularly a forward declaration that allows the function to be called without a definition being seen, which is required to use the function across translation units without the function being defined in each.)
 
 Should we allow *named* types defined as return types?
 ------------------------------------------------------
@@ -242,7 +242,7 @@ It is our hope that these issues can be addressed with existing compound types (
 What about deduced return types?
 --------------------------------
 
-This feature is not compatible with deduced return types at this time. In light of P0329_, it might be possible to lift this restriction:
+The relaxation of [dcl.fct]/11 is not intended to extend to deduction of new types via deduced return types. In light of P0329_, we might imagine a further extension that would allow us to lift this restriction:
 
 .. code:: c++
 
