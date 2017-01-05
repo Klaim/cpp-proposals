@@ -101,7 +101,7 @@ Definition of a class-type as a return value type is currently ill-formed (altho
 Implementation and Existing Practice
 ====================================
 
-The proposed feature to allow types as return values is at least already partly implemented by MSVC and (to a lesser extend) GCC and ICC. The curious, partial support in GCC and ICC (see `What about defining types in function pointer types?`_) suggests that the existing prohibition may already be largely artificial, and that removing it would accordingly be a simple matter.
+The proposed feature to allow defining types (including anonymous types) during return value specification is already at least partly implemented by MSVC and (to a lesser extent) GCC and ICC, and is also partly conforming to C++14. The trick shown in `Can't we do this already?`_ as well as the curious, partial support in GCC and ICC (see `What about defining types in function pointer types?`_) suggests that the existing prohibition may already be largely artificial, and that removing it would accordingly be a simple matter.
 
 The proposed feature to allow :cpp:`decltype(return)` to name the return value has not, to our knowledge, been implemented, but given that compilers must already compare the return value when confronted with an initial declaration followed by subsequent redeclarations and/or a definition, we do not anticipate any implementation difficulties.
 
@@ -166,7 +166,7 @@ An alternative (which may be worth considering for all cases) is to permit anony
 Is :cpp:`decltype(return)` dangerous?
 -------------------------------------
 
-P0224_ previously recommended overloading :cpp:`auto` as a mechanism for implicitly naming the return type given a prior declaration. While we believe this approach is feasible, there were some potential issues, which are discussed in P0224_. While we would happily accept the solution proposed by P0224_, we feel that :cpp:`decltype(return)` is less ambiguous, both to readers and to compilers. It is slightly more verbose than :cpp:`auto`, but not so much that we feel the added verbosity is an issue in those cases where we expect it to be used, and the extra verbosity may serve to deter "frivolous" use. Particularly, there is a clear distinction between inferred return values (the traditional use of :cpp:`auto` as a return type) and "implied" return values (that is, the use of :cpp:`decltype(return)` as an alternate spelling of a previously declared return type).
+P0224_ previously recommended overloading :cpp:`auto` as a mechanism for implicitly naming the return type given a prior declaration. While we believe this approach is feasible, there were some potential issues, which are discussed in P0224_. While we would happily accept the solution proposed by P0224_, we feel that :cpp:`decltype(return)` is less ambiguous, both to readers and to compilers. It is slightly more verbose than :cpp:`auto`, but not so much that we feel the added verbosity is an issue in those cases where we expect it to be used, and the extra verbosity may serve to deter "frivolous" use. Particularly, there is a clear distinction between inferred return values (the traditional use of :cpp:`auto` as a return type) and "implied" return values (that is, the use of :cpp:`decltype(return)` as an alternate spelling of a previously declared return type), which entirely avoids the issue this question, as it appears in P0224_, addressed.
 
 What about defining types in function pointer types?
 ----------------------------------------------------
@@ -261,7 +261,7 @@ In the Discussion_ section above, we presented a utility for extracting the retu
 
 Another consideration that seems likely to come up is if we should further simplify the syntax for returning multiple values (conceivably, this could apply to both anonymous structs and to :cpp:`std::pair` / :cpp:`std::tuple`). Some have suggested allowing that the :cpp:`struct` keyword may be omitted. In light of P0151_ and P0341_, we can conceive that allowing the syntax :cpp:`<int x, double y> foo()` might be interesting (in contrast to P0341_, we would suggest that this be shorthand for :cpp:`std::tuple`). At this time, we prefer to focus on the feature here presented rather than risk overextending the reach of this proposal. However, if this proposal is accepted, it represents an obvious first step to considering such features in the future.
 
-A final consideration is the extension of :cpp:`decltype(return)` to allow use within a function body. At the time of writing, we are not aware of a proposal to do so, although the idea has been floated on numerous occasions. We would hope to see such an addition, which can be orthogonal to this proposal, in the near future.
+A final consideration is the extension of :cpp:`decltype(return)` to allow use within a function body. At the time of writing, we are not aware of a proposal to do so, although the idea has been floated on numerous occasions. We would hope to see such an addition, which can be orthogonal to this proposal, in the near future. (This also serves as an additional argument for using :cpp:`decltype(return)` to name the return value rather than :cpp:`auto`.)
 
 
 Acknowledgments
