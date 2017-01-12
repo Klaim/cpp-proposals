@@ -270,6 +270,8 @@ It's harder to imagine generic uses for slicing product types, since product typ
     return {[:-1]a / [-1]a...};
   }
 
+In some cases, it may be possible to write generic versions of such algorithms making use of :cpp:`std::invoke`, but doing so is likely to require employing a lambda to receive the argument pack, and will almost certainly be much more unwieldy than the simple, succinct syntax our proposal makes possible.
+
 Improving :cpp:`std::apply`
 ---------------------------
 
@@ -330,6 +332,21 @@ Other alternatives that have been proposed or considered:
 
 The exact syntax for these features could be debated. We prefer prefix :cpp:`operator[]` because C++ programmers are already familiar with :cpp:`operator[]` as an indexing operator, which is essentially what we are proposing (especially for the single value case), and because the proposed syntax is very similar to Python, which will already be familiar to some C++ programmers. At the same time, the choice of a prefix as opposed to postfix syntax makes it clear that the slicing operation |--| which we like to think of as *compile-time indexing* |--| is different from the usual *run-time indexing*.
 
+Does this conflict with :cpp:`operator[](constexpr size_t)`?
+------------------------------------------------------------
+
+One "obvious" argument against product type slicing is that :cpp:`constexpr` parameters will make it irrelevant. We feel that this should not be given great weight against this proposal for several reasons:
+
+- We don't have :cpp:`constexpr` parameters yet. At this time, we are not even aware of a proposal for such a feature.
+
+- There are several interesting implications to a :cpp:`operator[](constexpr size_t)`, including the (mostly) novel notion that the return type will depend on the *function arguments*. It is unclear if this is desirable.
+
+- Even if we get :cpp:`operator[](constexpr size_t)`, will such an operator be implicitly generated for all product types? Given the difficulty with other "provide operators by default" proposals, this seems dubious at best.
+
+- While our proposed feature may be equivalent to :cpp:`operator[]` for some types, this may not be the case for *all* types. For example, a span might present itself as a product type consisting of either a begin/end or begin/size, while :cpp:`operator[]` provides indexed access to the span.
+
+Our proposed language feature avoids these issues by being clearly distinct from existing :cpp:`operator[]`; it is in essence a novel operator. This is especially salient in the case of multi-valued slicing / unpacking, but also serves to make it more obvious to the user that a language feature is being employed rather than a traditional operator function.
+
 Does this make :cpp:`std::apply` (and :cpp:`std::make_from_tuple`) obsolete?
 ----------------------------------------------------------------------------
 
@@ -337,8 +354,8 @@ No. There will almost certainly remain cases where :cpp:`std::apply` and/or :cpp
 
 That said, we do expect that *most* uses of :cpp:`std::apply` and :cpp:`std::make_from_tuple` can be replaced with the use of this feature.
 
-Are "dead" access to product type value elided?
------------------------------------------------
+Are "dead" accesses to product type value elided?
+-------------------------------------------------
 
 Consider the following code:
 
@@ -411,6 +428,11 @@ Why extend :cpp:`sizeof...`?
 
 The short answer is "symmetry". It seems logical to us that if slicing works on both parameter packs and "concrete" product types that :cpp:`sizeof...` should do likewise. However, this modification could be dropped without significantly harming the proposal.
 
+Can't we use a purely library solution?
+---------------------------------------
+
+No. While it may be possible to implement a standardized library function to extract a *single* element from a parameter pack, slicing requires *some* form of language solution (see also next question), or else the creation of temporary objects that will only be destroyed again immediately. (Additionally, we dislike any solution that creates a temporary product type because it is difficult for the user to control what type is used for this purpose. This is also why we dislike using a library function to slice product types. By producing a parameter pack, the pack can be used directly when that is desired, or used to construct a product type of the user's choice as needed.) A library solution would also be much more verbose, and may result in poorer code generation, whereas language level slicing of parameter packs is trivially accomplished by the compiler.
+
 What alternatives were considered?
 ----------------------------------
 
@@ -461,7 +483,22 @@ The return type of :cpp:`calculateTargetCoordinates` is a regular type, and we c
 Future Direction
 ================
 
+Complex Ordering
+----------------
+
 This feature is not intended to solve all cases of value sequence compositions and decompositions by itself. We specifically are not attempting to provide a language mechanism for reversing a value sequence, selecting indices (e.g. every other item) from a value sequence, or interleaving value sequences. We believe that there is significant room for library features to bring added value to this area. Such features would likely leverage this feature under the covers. (Parameter pack generation, which as noted is a feature we would like to see, almost certainly would use at least single-value indexing into parameter packs.)
+
+Interaction with Assignment Unpacking
+-------------------------------------
+
+As stated several times, this feature is intended to continue in a direction first taken by assignment unpacking. Despite that, combining these features presents an interesting challenge. Consider:
+
+.. code:: c++
+
+  auto [a, b] = [:2]pt;
+  auto [a, b] = {[:2]pt...};
+
+It seems natural to desire that one or both of these syntaxes should be permitted, but at this time (even with full adoption of this proposal as presented), both are ill-formed. The latter possibly will become valid if and when general product type access is extended to initializer lists, with the assumption that such extension will include modification of assignment unpacking to work with any product type. However, there are potential lifetime issues involved. For this reason and others, it may be interesting to extend assignment unpacking to also work directly with parameter packs, with the added stipulation that a product type converted to a parameter pack is "pass through" when appearing as the RHS of an assignment unpacking statement; that is, the assignment unpacking would be aware of the original product type for the purpose of object lifetime. We do not feel that this feature is necessary initially, but would recommend a follow-up paper if the feature proposed is accepted.
 
 
 Acknowledgments
