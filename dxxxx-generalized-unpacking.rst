@@ -13,6 +13,8 @@
   <style>
     html { color: black; background: white; }
     table.docinfo { margin: 2em 0; }
+    p, li { text-align: justify; }
+    li { margin-bottom: 0.5em; }
     .lit { font-weight: bold; }
     .var { font-style: italic; }
     .var::before { font-style: normal; content: "<"; }

@@ -13,6 +13,7 @@
   <style>
     html { color: black; background: white; }
     table.docinfo { margin: 2em 0; }
+    p, li { text-align: justify; }
   </style>
 
 .. role:: cpp(code)
@@ -22,7 +23,7 @@
 Abstract
 ========
 
-This proposal recommends the relaxing of [dcl.fct]/11; specifically, the prohibition of defining (anonymous) types as return values, and adding a mechanism that simplifies naming the return type of a previously declared function. These features were previously proposed separately, as P0222_ and P0224_.
+This proposal recommends the relaxing of [dcl.fct]\ |para|\ 11; specifically, the prohibition of defining (anonymous) types as return values, and adding a mechanism that simplifies naming the return type of a previously declared function. These features were previously proposed separately, as P0222_ and P0224_.
 
 .. contents::
 
@@ -54,7 +55,7 @@ We propose, first, to remove the restriction against (anonymous) types as return
 
   struct { int id; double value; } foo() { ... }
 
-We believe this can be accomplished largely by simply removing the prohibition in [dcl.fct]/11.
+We believe this can be accomplished largely by simply removing the prohibition in [dcl.fct]\ |para|\ 11.
 
 Second, we propose the addition of :cpp:`decltype(return)` to name |--| in a function signature |--| the return type of a previously declared function. This is consistent with recent changes to the language that have progressively relaxed the requirements for how return types are specified, and provides an optimal solution to the following problem:
 
@@ -87,7 +88,7 @@ Naturally, "previous declared" here means a declaration having the same name and
     return result;
   }
 
-The reasons to prohibit an anonymous struct defined as a return type have also been significantly mitigated. Constructing the return result is a non-issue, since the type name may now be elided, and the combination of :cpp:`auto` variable declarations, :cpp:`decltype`, and the proposed mechanism for naming the return type in a function signature permit implicit naming of the type where necessary. In short, the prohibition ([dcl.fct]/11) against defining types in return type specifications has become largely an artificial and arbitrary restriction which we propose to remove.
+The reasons to prohibit an anonymous struct defined as a return type have also been significantly mitigated. Constructing the return result is a non-issue, since the type name may now be elided, and the combination of :cpp:`auto` variable declarations, :cpp:`decltype`, and the proposed mechanism for naming the return type in a function signature permit implicit naming of the type where necessary. In short, the prohibition ([dcl.fct]\ |para|\ 11) against defining types in return type specifications has become largely an artificial and arbitrary restriction which we propose to remove.
 
 We additionally note that this prohibition is already not enforced by at least one major compiler (MSVC), and is enforced sporadically in others (see `What about defining types in function pointer types?`_).
 
@@ -128,7 +129,7 @@ The critical problem with this, which we wish specifically to address, is that a
 Should we allow *named* types defined as return types?
 ------------------------------------------------------
 
-Allowing both named and anonymous types is a logical consequence of simply lifting the existing [dcl.fct]/11 prohibition as it is currently stated. It is also consistent, and already supported by MSVC:
+Allowing both named and anonymous types is a logical consequence of simply lifting the existing [dcl.fct]\ |para|\ 11 prohibition as it is currently stated. It is also consistent, and already supported by MSVC:
 
 .. code:: c++
 
@@ -171,7 +172,7 @@ P0224_ previously recommended overloading :cpp:`auto` as a mechanism for implici
 What about defining types in function pointer types?
 ----------------------------------------------------
 
-An obvious consequence of relaxing [dcl.fct]/11 is the desire to permit function pointers which return an anonymous struct. For example:
+An obvious consequence of relaxing [dcl.fct]\ |para|\ 11 is the desire to permit function pointers which return an anonymous struct. For example:
 
 .. code:: c++
 
@@ -199,7 +200,7 @@ An obvious consequence of relaxing [dcl.fct]/11 is the desire to permit function
       return bar(&foo);
   }
 
-It is our opinion that the proposed changes are sufficient to allow the above. (In fact, this example is already accepted by both GCC and ICC, although it is rejected by clang per [dcl.fct]/11.) Accordingly, we feel that this proposal should be understood as intending to allow the above example and that additional wording changes to specify this behavior are not required at this time.
+It is our opinion that the proposed changes are sufficient to allow the above. (In fact, this example is already accepted by both GCC and ICC, although it is rejected by clang per [dcl.fct]\ |para|\ 11.) Accordingly, we feel that this proposal should be understood as intending to allow the above example and that additional wording changes to specify this behavior are not required at this time.
 
 What about defining types in parameter types?
 ---------------------------------------------
@@ -223,7 +224,7 @@ Another question that has come up is if something like this should be allowed:
 
 Specifically, others have expressed an interest in treating layout-compatible types as equivalent (or at least, implicitly convertible), particularly in the context of return values as in the above example.
 
-Under the current rules (plus relaxed [dcl.fct]/11), these two definitions have different return types which are not convertible. It is our opinion that the rules making these types different are in fact correct and desirable, and this proposal specifically does *not* include any changes which would make the types compatible. That said, we note that FIXME_ provides a ready solution to this problem:
+Under the current rules (plus relaxed [dcl.fct]\ |para|\ 11), these two definitions have different return types which are not convertible. It is our opinion that the rules making these types different are in fact correct and desirable, and this proposal specifically does *not* include any changes which would make the types compatible. That said, we note that FIXME_ provides a ready solution to this problem:
 
 .. code:: c++
 
@@ -242,7 +243,7 @@ It is our hope that these issues can be addressed with existing compound types (
 What about deduced return types?
 --------------------------------
 
-The relaxation of [dcl.fct]/11 is not intended to extend to deduction of new types via deduced return types. In light of P0329_, we might imagine a further extension that would allow us to lift this restriction:
+The relaxation of [dcl.fct]\ |para|\ 11 is not intended to extend to deduction of new types via deduced return types. In light of P0329_, we might imagine a further extension that would allow us to lift this restriction:
 
 .. code:: c++
 
@@ -326,5 +327,6 @@ References
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
 .. |--| unicode:: U+02014 .. em dash
+.. |para| unicode:: U+00B6 .. paragraph sign
 
 .. kate: hl reStructuredText

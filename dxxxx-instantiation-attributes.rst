@@ -13,6 +13,7 @@
   <style>
     html { color: black; background: white; }
     table.docinfo { margin: 2em 0; }
+    p, li { text-align: justify; }
     .literal-block { background: #eee; border: 1px solid #ddd; padding: 0.5em; }
     .addition { color: #2c2; text-decoration: underline; }
     .removal { color: #e22; text-decoration: line-through; }

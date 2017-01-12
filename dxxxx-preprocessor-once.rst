@@ -13,6 +13,7 @@
   <style>
     html { color: black; background: white; }
     table.docinfo { margin: 2em 0; }
+    p, li { text-align: justify; }
   </style>
 
 .. role:: cpp(code)
