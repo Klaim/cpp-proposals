@@ -58,7 +58,7 @@ We propose to introduce three new preprocessor directives in an attempt to addre
 
   **#once** *identifier* [ *<whitespace>* *version* ]
 
-The *identifier* shall consist of one or more C++ identifiers (sequences of alphanumeric characters and/or ``_``, not starting with a digit) joined by ``::`` (henceforth referred to as a "qualified name"). The *version*, if specified, shall be a token string consisting of alphanumeric characters and/or the ``_``, ``-``, ``:`` or ``.`` characters, not starting with ``:``, and shall set the version associated with the specified *identifier*.
+The *identifier* shall consist of one or more C++ identifiers (sequences of alphanumeric characters and/or ``_``, not starting with a digit) joined by ``::`` (henceforth referred to as a "qualified name"). The *version*, if specified, shall be a token string consisting of alphanumeric characters and/or the ``_`` or ``.`` characters, or a string literal, and shall set the version associated with the specified *identifier*.
 
 If a previous :cpp:`#once` directive having the same *identifier* and *version* has been previously seen, the compiler shall ignore the remainder of the :cpp:`#include` unit. If the *identifier* is known but the *version* does not match, the program shall be ill-formed. (If *version* is unspecified, the version shall be the empty string.)
 
