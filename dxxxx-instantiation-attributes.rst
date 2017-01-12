@@ -58,7 +58,7 @@ Combined with templates, where the definition of a template function may be inte
 
 Since attributes were introduced in C++11, there has been activity toward standardizing the mechanisms for export decoration. In particular, GCC and Clang support the use of ``[[gnu::visibility("default")]]`` as a replacement for ``__attribute__((visibility("default")))``. This is an obvious improvement: it is shorter to write, and compilers that don't understand the C++11 attribute may ignore it, rather than raising a syntax error as would be the case if the old form were used with a compiler that does not support it.
 
-Astute readers may have spotted the problem by now: *explicit instantiations forbid attributes* ([dcl.attr.grammar]\ |para|\ 5). This means that the above example cannot use a C++11 attribute on a conforming compiler; indeed, there is no way to write strictly conforming code that also specifies that the instantiation should be exported.
+Astute readers may have spotted the problem by now: *explicit instantiations forbid attributes* (|dcl.attr.grammar#5|). This means that the above example cannot use a C++11 attribute on a conforming compiler; indeed, there is no way to write strictly conforming code that also specifies that the instantiation should be exported.
 
 
 Proposal
@@ -76,7 +76,7 @@ Proposed Wording
 
 (Proposed changes are specified relative to N4606_.)
 
-In [dcl.attr.grammar]\ |para|\ 5, make the following change:
+In |dcl.attr.grammar#5|, make the following change:
 
 .. compound::
   :class: literal-block
@@ -106,6 +106,11 @@ References
 * N4606_ Working Draft, Standard for Programming Language C++
 
   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4606.pdf
+
+.. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
+
+.. |dcl.attr.grammar#5| replace:: [\ `dcl.attr.grammar`_\ ]\ |para|\ 5
+.. _dcl.attr.grammar: http://wg21.link/n4606#subsection.7.6.1
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
