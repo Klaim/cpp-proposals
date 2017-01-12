@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  Dxxxx
-:Date:      2017-01-05
+:Date:      2017-01-12
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -15,13 +15,9 @@
     table.docinfo { margin: 2em 0; }
     p, li { text-align: justify; }
     li { margin-bottom: 0.5em; }
-    .lit { font-weight: bold; }
-    .var { font-style: italic; }
-    .var::before { font-style: normal; content: "<"; }
-    .var::after { font-style: normal; content: ">"; }
-    .optvar { font-style: italic; }
-    .optvar::before { font-style: normal; content: "[<"; }
-    .optvar::after { font-style: normal; content: ">]"; }
+    .lit { font-weight: bold; padding: 0 0.3em; }
+    .var { font-style: italic; padding: 0 0.3em; }
+    .opt::after { font-size: 70%; position: relative; bottom: -0.25em; content: "opt"; }
   </style>
 
 .. role:: cpp(code)
@@ -34,7 +30,7 @@
     :class: var
 
 .. role:: optvar(code)
-    :class: optvar
+    :class: opt var
 
 Abstract
 ========
