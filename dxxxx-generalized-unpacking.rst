@@ -382,6 +382,8 @@ Certainly in the above example, we believe that the compiler should elide the "s
 
 If we consider an initializer list to be a product type, conceivably a user desiring side effects could obtain them by writing :cpp:`[1]{[:]t...}`, which makes the intent to evaluate all values of :cpp:`t` prior to selecting a single value even more explicit.
 
+(Note that one strong reason to consider :cpp:`[1][:]pt` and :cpp:`[1]pt` equivalent is for cases when the user actually writes something like :cpp:`[:n][i:]pt`, i.e. ':cpp:`n` elements of :cpp:`pt` starting with index :cpp:`i`'. In this case, evaluation of all indices starting with :cpp:`i` is not necessarily desired, but restructuring the code to avoid this requires a more complicated expression that is especially difficult if :cpp:`i` and/or :cpp:`n` are expressions. Introducing an exception would make this feature more difficult to teach.)
+
 What about ambiguity with lambda captures?
 ------------------------------------------
 
