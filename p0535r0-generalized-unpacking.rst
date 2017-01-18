@@ -2,7 +2,7 @@
   Generalized Unpacking and Parameter Pack Slicing
 ====================================================
 
-:Document:  Dxxxx
+:Document:  P0535R0
 :Date:      2017-01-12
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
@@ -440,7 +440,7 @@ What alternatives were considered?
 
 There are at least three possible alternatives that could provide features similar to generalized unpacking, as proposed here. The first alternative is first class support for multiple return values, where such are treated as parameter packs. The second is modifying structured binding (which we prefer to call "assignment unpacking", for symmetry with "generalized unpacking") to support specifying a parameter pack as one of the unpacked values. The third is to introduce parameter pack generators.
 
-- First class support for multiple return values (which is effectively proposed by P0341_) is an ambitious feature with assorted difficulties (see next question). Moreover, if FIXME_ is accepted, the need for true first class multiple return values would be significantly lessened.
+- First class support for multiple return values (which is effectively proposed by P0341_) is an ambitious feature with assorted difficulties (see next question). Moreover, if P0536_ is accepted, the need for true first class multiple return values would be significantly lessened.
 
 - Modifying assignment unpacking (e.g. :cpp:`auto&& [x, p..., y] = t;`) is likewise a language change of similar caliber to what we propose, with the added drawback of requiring additional declarations for many use cases.
 
@@ -453,7 +453,7 @@ We believe that our proposal is the best solution, as it solves a crucial need n
 How does this relate to P0341_?
 -------------------------------
 
-We would be remiss to not discuss P0341_, especially in light of our proposed generalized unpacking feature. Leaving aside various concerns as far as returning parameter packs (which are also discussed in FIXME_), generalized unpacking obviates a major use case for some of the features proposed by P0341_. In particular, P0341_ gives this example:
+We would be remiss to not discuss P0341_, especially in light of our proposed generalized unpacking feature. Leaving aside various concerns as far as returning parameter packs (which are also discussed in P0536_), generalized unpacking obviates a major use case for some of the features proposed by P0341_. In particular, P0341_ gives this example:
 
 .. code:: c++
 
@@ -548,7 +548,11 @@ References
 
   http://wg21.link/p0478
 
-.. FIXME link to p0222/p0224 successor
+.. _P0536: http://wg21.link/p0536
+
+* P0536_ Implicit Return Type and Allowing Anonymous Types as Return Values
+
+  http://wg21.link/p0536
 
 .. _PEP 0448: https://www.python.org/dev/peps/pep-0448
 

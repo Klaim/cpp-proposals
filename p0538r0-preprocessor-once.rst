@@ -2,7 +2,7 @@
   A Qualified Replacement for ``#pragma once``
 ================================================
 
-:Document:  Dxxxx
+:Document:  P0538R0
 :Date:      2016-10-27
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group

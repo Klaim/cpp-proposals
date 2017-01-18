@@ -2,7 +2,7 @@
   Implicit Return Type and Allowing Anonymous Types as Return Values
 ======================================================================
 
-:Document:  DXXXXR0
+:Document:  P0536R0
 :Date:      2017-01-05
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
@@ -35,7 +35,7 @@ The concept of multiple return values is well known. At present, however, C++ la
 
 The addition of "structured bindings" in C++17 in particular represents a significant step toward support of multiple return values as first class citizens. This feature, along with other ongoing efforts to add first class support for "product types" and other efforts such as P0341_ show an encouraging movement away from the traditional :cpp:`std::pair` and :cpp:`std::tuple` towards comparable concepts without requiring the explicit types. (We expect, however, that the standard template library types will remain useful for algorithms where the identity of the elements is unimportant, while it *is* important to be able to name at least the outer, if not complete, type. In that respect, we hypothesize that we may in the future see the ability to construct a :cpp:`std::tuple` from any tuple-like, as also suggested in P0197_.)
 
-On their own, however, these directions risk exacerbating the problem that this proposal aims to address. In particular, a concern with the notion of returning a parameter pack, as presented in P0341_, opens a potential ABI can of worms. Moreover, parameter packs are not true types, and are subject to significant limitations, such as inability to make copies or pass them around as single entities, which are not shared by regular compound types. With generalized unpacking (\ FIXME_), product types and parameter packs are effectively interchangeable, and returning a product type rather than a parameter pack leverages existing ABI and techniques, rather than introducing something entirely novel. The remaining issue is one of naming; naming things |--| in this case, return types, especially for one-off functions |--| is *hard*.
+On their own, however, these directions risk exacerbating the problem that this proposal aims to address. In particular, a concern with the notion of returning a parameter pack, as presented in P0341_, opens a potential ABI can of worms. Moreover, parameter packs are not true types, and are subject to significant limitations, such as inability to make copies or pass them around as single entities, which are not shared by regular compound types. With generalized unpacking (\ P0535_), product types and parameter packs are effectively interchangeable, and returning a product type rather than a parameter pack leverages existing ABI and techniques, rather than introducing something entirely novel. The remaining issue is one of naming; naming things |--| in this case, return types, especially for one-off functions |--| is *hard*.
 
 It has been suggested on multiple occasions that the optimal solution to the above issues is to return an anonymous :cpp:`struct`. This solves the problems of clutter and self-documentation, but runs afoul of a much worse issue; because the :cpp:`struct` is *anonymous*, it can be difficult to impossible to give its name a second time in order to separate the declaration and definition of the function that wishes to use it. This, however, leads to a more interesting question: **why is it necessary to repeat the return value at all?**
 
@@ -224,7 +224,7 @@ Another question that has come up is if something like this should be allowed:
 
 Specifically, others have expressed an interest in treating layout-compatible types as equivalent (or at least, implicitly convertible), particularly in the context of return values as in the above example.
 
-Under the current rules (plus relaxed |dcl.fct#11|), these two definitions have different return types which are not convertible. It is our opinion that the rules making these types different are in fact correct and desirable, and this proposal specifically does *not* include any changes which would make the types compatible. That said, we note that FIXME_ provides a ready solution to this problem:
+Under the current rules (plus relaxed |dcl.fct#11|), these two definitions have different return types which are not convertible. It is our opinion that the rules making these types different are in fact correct and desirable, and this proposal specifically does *not* include any changes which would make the types compatible. That said, we note that P0535_ provides a ready solution to this problem:
 
 .. code:: c++
 
@@ -322,7 +322,11 @@ References
 
   http://wg21.link/p0341
 
-.. FIXME link to gen-unpack
+.. _P0535: http://wg21.link/p0535
+
+* P0535_ Generalized Unpacking and Parameter Pack Slicing
+
+  http://wg21.link/p0535
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 

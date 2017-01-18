@@ -2,7 +2,7 @@
   Allow Attributes on Template Explicit Instantiations
 ========================================================
 
-:Document:  Dxxxx
+:Document:  P0537R0
 :Date:      2016-08-23
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
