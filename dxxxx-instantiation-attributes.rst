@@ -107,6 +107,12 @@ References
 
   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/n4606.pdf
 
+.. _llvm#29094: https://llvm.org/bugs/show_bug.cgi?id=29094
+
+* `llvm#29094`_ C++11 attributes not accepted in template explicit instantiation
+
+  https://llvm.org/bugs/show_bug.cgi?id=29094
+
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
 .. |dcl.attr.grammar#5| replace:: [\ `dcl.attr.grammar`_\ ]\ |para|\ 5

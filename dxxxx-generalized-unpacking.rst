@@ -43,7 +43,7 @@ This proposal introduces two new, related concepts: "generalized unpacking" (the
 Background
 ==========
 
-There is an increasing push in C++ to add interoperability between values and value sequences, exemplified by the recent addition of "structured binding", :cpp:`std::apply`, and :cpp:`std::make_from_tuple` in C++17, and by proposals such as P0327_ that work toward expanding and clarifying the concept of value sequences (using the term "product type") and P0341_ which proposes certain mechanisms for using product types. Similar features have long been present in other languages, with Python frequently held up as a representative example. While we feel that these represent steps in the right direction, there remain problems to be solved.
+There is an increasing push in C++ to add interoperability between values and value sequences, exemplified by the recent addition of "structured binding", :cpp:`std::apply`, and :cpp:`std::make_from_tuple` in C++17, and by proposals such as P0327_ that work toward expanding and clarifying the concept of value sequences (using the term "product type") and P0341_ which proposes certain mechanisms for using product types. Similar features have long been present in other languages, with Python frequently held up as a representative example (see also `PEP 0448`_). While we feel that these represent steps in the right direction, there remain problems to be solved.
 
 
 Rationale
@@ -549,6 +549,12 @@ References
   http://wg21.link/p0478
 
 .. FIXME link to p0222/p0224 successor
+
+.. _PEP 0448: https://www.python.org/dev/peps/pep-0448
+
+* `PEP 0448`_ Additional Unpacking Generalizations
+
+  https://www.python.org/dev/peps/pep-0448
 
 .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. .. ..
 
