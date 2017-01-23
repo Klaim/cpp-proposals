@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  P0535R0
-:Date:      2017-01-12
+:Date:      2017-01-19
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -99,7 +99,7 @@ Generalized Unpacking
 
 By presenting slicing first, we may consider generalized unpacking to be an extension of parameter pack operations to work on product types. Specifically, we propose that the above described slicing operator and :cpp:`sizeof...` be extended to accept product types as well as parameter packs. When used on a product type, the type is "unpacked" into a parameter pack.
 
-For example, given a product type :cpp:`t` of size 3, :cpp:`sizeof...(t)` would be well formed and equal to 3, and the expression :cpp:`[:]t` would expand to a parameter pack equivalent to :cpp:`get<0>(t), get<1>(t), get<2>(t)`. (While we use :cpp:`get<N>` here for illustrative purposes, this proposal would reflect any changes made to product type access.)
+For example, given a product type :cpp:`t` of size 3, :cpp:`sizeof...(t)` would be well formed and equal to 3, and the expression :cpp:`[:]t` would expand to a parameter pack equivalent to :cpp:`get<0>(t), get<1>(t), get<2>(t)`. (While we use :cpp:`get<N>` here for illustrative purposes, this proposal would reflect any changes made to product type access.) Moreover, as is usual for :cpp:`sizeof`, the argument here should be *unevaluated*.
 
 Accordingly, :cpp:`[expr1]expr2` would be equivalent to :cpp:`get<expr1>(expr2)`; that is, a single value rather than a parameter pack.
 
@@ -126,6 +126,22 @@ This makes possible uses like the following, which are not readily accomplished 
   auto dot = ([:]v1 * [:]v2) + ...;
 
 Note also an important implication of both the above code and many of the examples to follow; namely, that we assign the slicing/unpacking operator (prefix :cpp:`operator[]`) higher precedence than fold operator (postfix :cpp:`operator...`).
+
+Finally, we would be remiss if we failed to note one last reason why implementing a language feature that allows indexed access to product types is useful: it can allow access to bitfield members. At this time, there is no way to implement :cpp:`get<N>` for an aggregate containing bitfield members that would allow assignment to those members. However, a language feature that operates in the same manner as decomposition declarations, as our proposed feature would, can accomplish this. Thus, the following example becomes possible, and has the intended effect:
+
+.. code:: c++
+
+  struct Foo
+  {
+    int a : 4;
+    int b : 4;
+  };
+
+  Foo foo;
+  [0]foo = 7;
+  [1]foo = 5;
+
+Although we would prefer an eventual resolution to this issue that allows bitfields to become first class citizens (e.g. the ability to return a bitfield reference or pass a bitfield reference as a parameter), our proposed language feature would at least extend indexed access to product types with bitfield members.
 
 
 Additional Examples
@@ -310,7 +326,7 @@ Discussion
 What is a "product type"?
 -------------------------
 
-This is an excellent question which deserves its own paper. P0327_ makes a good start. When we get to the point of specifying wording, this will need to be addressed; ideally, this will have happened in parallel. Some "working definitions" which may be used to help with consideration of this proposal are "types which define :cpp:`tuple_size` and :cpp:`get`", or "types to which 'structured binding' / 'assignment unpacking' may be applied".
+This is an excellent question which deserves its own paper. P0327_ makes a good start. When we get to the point of specifying wording, this will need to be addressed; ideally, this will have happened in parallel. Some "working definitions" which may be used to help with consideration of this proposal are "types which define :cpp:`tuple_size` and :cpp:`get`", or "types to which decomposition declarations may be applied".
 
 Why combine these features?
 ---------------------------
@@ -384,6 +400,18 @@ If we consider an initializer list to be a product type, conceivably a user desi
 
 (Note that one strong reason to consider :cpp:`[1][:]pt` and :cpp:`[1]pt` equivalent is for cases when the user actually writes something like :cpp:`[:n][i:]pt`, i.e. ':cpp:`n` elements of :cpp:`pt` starting with index :cpp:`i`'. In this case, evaluation of all indices starting with :cpp:`i` is not necessarily desired, but restructuring the code to avoid this requires a more complicated expression that is especially difficult if :cpp:`i` and/or :cpp:`n` are expressions. Introducing an exception would make this feature more difficult to teach.)
 
+How does unpacking interact with temporaries?
+---------------------------------------------
+
+Consider the following code:
+
+.. code:: c++
+
+  // let foo() be a function returning a newly constructed product type
+  bar([:]foo()...);
+
+What does this mean with respect to object lifetime? Obviously, we do not want for :cpp:`foo()` to be :cpp:`sizeof...(foo())` times. Rather, the compiler should internally generate a temporary, whose lifetime shall be the same as if the unpacked expression had not been subject to unpacking.
+
 What about ambiguity with lambda captures?
 ------------------------------------------
 
@@ -438,11 +466,11 @@ No. While it may be possible to implement a standardized library function to ext
 What alternatives were considered?
 ----------------------------------
 
-There are at least three possible alternatives that could provide features similar to generalized unpacking, as proposed here. The first alternative is first class support for multiple return values, where such are treated as parameter packs. The second is modifying structured binding (which we prefer to call "assignment unpacking", for symmetry with "generalized unpacking") to support specifying a parameter pack as one of the unpacked values. The third is to introduce parameter pack generators.
+There are at least three possible alternatives that could provide features similar to generalized unpacking, as proposed here. The first alternative is first class support for multiple return values, where such are treated as parameter packs. The second is modifying structured binding (which we prefer to call "name-binding unpacking", for symmetry with "generalized unpacking") to support specifying a parameter pack as one of the unpacked values. The third is to introduce parameter pack generators.
 
 - First class support for multiple return values (which is effectively proposed by P0341_) is an ambitious feature with assorted difficulties (see next question). Moreover, if P0536_ is accepted, the need for true first class multiple return values would be significantly lessened.
 
-- Modifying assignment unpacking (e.g. :cpp:`auto&& [x, p..., y] = t;`) is likewise a language change of similar caliber to what we propose, with the added drawback of requiring additional declarations for many use cases.
+- Modifying name-binding unpacking (e.g. :cpp:`auto&& [x, p..., y] = t;`) is likewise a language change of similar caliber to what we propose, with the added drawback of requiring additional declarations for many use cases.
 
 - Parameter pack generation is interesting (in fact, we would like to see parameter pack generation *in addition* to this proposal), but still requires the ability to extract a single element from a pack.
 
@@ -481,6 +509,15 @@ Generalized unpacking provides a much better solution:
 
 The return type of :cpp:`calculateTargetCoordinates` is a regular type, and we can call :cpp:`distanceFromMe` on any product type value that can convert (or be sliced) to a pair of :cpp:`double`\ s.
 
+How does this relate to P0478_?
+-------------------------------
+
+After picking on their examples, it would be unfair if we did not follow up by asking if our proposed feature makes P0478_ unnecessary. As with :cpp:`std::apply`, we feel that the answer is "not necessarily", even though our feature significantly reduces the need for P0478_. However, there are two use cases for combining pack and non-pack arguments. One case, which our proposal addresses in a significantly better manner, is artificial separation as a means for slicing parameter packs. The example we deconstructed above, as well as the many functions of the form :cpp:`T first, Args... remainder`, clearly fall into this category. In these cases, this artificial decomposition of the argument list is detrimental to the clarity of the function's interface, and as shown can lead to implementation bugs.
+
+Another case, however, is where the separation is non-artificial; where, for whatever reason, a function accepts a variadic argument pack followed by one or more arguments that are logically unrelated to the pack. For such cases, P0478_ would provide improved clarity at the interface level, as well as the ability to specify (or at least, separately name) types for the trailing arguments.
+
+That said, in light of our proposed feature, it may well be that a much more compelling rationale for P0478_ would be desired in order for that feature to be accepted.
+
 
 Future Direction
 ================
@@ -490,23 +527,23 @@ Complex Ordering
 
 This feature is not intended to solve all cases of value sequence compositions and decompositions by itself. We specifically are not attempting to provide a language mechanism for reversing a value sequence, selecting indices (e.g. every other item) from a value sequence, or interleaving value sequences. We believe that there is significant room for library features to bring added value to this area. Such features would likely leverage this feature under the covers. (Parameter pack generation, which as noted is a feature we would like to see, almost certainly would use at least single-value indexing into parameter packs.)
 
-Interaction with Assignment Unpacking
--------------------------------------
+Interaction with Name-Binding Unpacking
+---------------------------------------
 
-As stated several times, this feature is intended to continue in a direction first taken by assignment unpacking. Despite that, combining these features presents an interesting challenge. Consider:
+As stated several times, this feature is intended to continue in a direction first taken by name-binding unpacking. Despite that, combining these features presents an interesting challenge. Consider:
 
 .. code:: c++
 
   auto [a, b] = [:2]pt;
   auto [a, b] = {[:2]pt...};
 
-It seems natural to desire that one or both of these syntaxes should be permitted, but at this time (even with full adoption of this proposal as presented), both are ill-formed. The latter possibly will become valid if and when general product type access is extended to initializer lists, with the assumption that such extension will include modification of assignment unpacking to work with any product type. However, there are potential lifetime issues involved. For this reason and others, it may be interesting to extend assignment unpacking to also work directly with parameter packs, with the added stipulation that a product type converted to a parameter pack is "pass through" when appearing as the RHS of an assignment unpacking statement; that is, the assignment unpacking would be aware of the original product type for the purpose of object lifetime. We do not feel that this feature is necessary initially, but would recommend a follow-up paper if the feature proposed is accepted.
+It seems natural to desire that one or both of these syntaxes should be permitted, but at this time (even with full adoption of this proposal as presented), both are ill-formed. The latter possibly will become valid if and when general product type access is extended to initializer lists, with the assumption that such extension will include modification of name-binding unpacking to work with any product type. However, there are potential lifetime issues involved. For this reason and others, it may be interesting to extend name-binding unpacking to also work directly with parameter packs, with the added stipulation that a product type converted to a parameter pack is "pass through" when appearing as the RHS of an name-binding unpacking statement; that is, the name-binding unpacking would be aware of the original product type for the purpose of object lifetime. We do not feel that this feature is necessary initially, but would recommend a follow-up paper if the feature proposed is accepted.
 
 
 Acknowledgments
 ===============
 
-We wish to thank everyone on the ``std-proposals`` forum that has contributed over the long period for which this has been marinating.
+We wish to thank everyone on the ``std-proposals`` forum that has contributed over the long period for which this has been marinating. We also wish to thank everyone that worked to bring decomposition declarations to C++17, as well as the authors of all cited papers for their contributions to this field.
 
 
 References
