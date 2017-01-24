@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  P0535R0
-:Date:      2017-01-19
+:Date:      2017-01-24
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -359,9 +359,28 @@ One "obvious" argument against product type slicing is that :cpp:`constexpr` par
 
 - Even if we get :cpp:`operator[](constexpr size_t)`, will such an operator be implicitly generated for all product types? Given the difficulty with other "provide operators by default" proposals, this seems dubious at best.
 
-- While our proposed feature may be equivalent to :cpp:`operator[]` for some types, this may not be the case for *all* types. For example, a span might present itself as a product type consisting of either a begin/end or begin/size, while :cpp:`operator[]` provides indexed access to the span.
+- While our proposed feature may be equivalent to :cpp:`operator[]` for some types, this may not be the case for *all* types. For example, a span might present itself as a product type consisting of either a begin/end or begin/size, while :cpp:`operator[]` provides indexed access to the span. A novel operator is appropriate unless we are prepared to *unconditionally specify* that :cpp:`get<N>` and :cpp:`operator[](constexpr)` shall be synonyms.
+
+- We would still require a language feature for indexed access to parameter packs, and a postfix :cpp:`[]` may be ambiguous:
+
+  .. code:: c++
+
+    template <typename T, size_t N, typename... Vecs>
+    std::array<T, N> sum(Vecs... operands)
+    {
+      std::array<T, N> result;
+      for (int i = 0; i < N; ++i)
+        result[i] = operands[i] + ...;
+    }
+
+- Such an operator still cannot provide slicing. See also `What alternatives were considered?`_
 
 Our proposed language feature avoids these issues by being clearly distinct from existing :cpp:`operator[]`; it is in essence a novel operator. This is especially salient in the case of multi-valued slicing / unpacking, but also serves to make it more obvious to the user that a language feature is being employed rather than a traditional operator function.
+
+Doesn't adding another operator hurt teachability?
+--------------------------------------------------
+
+Obviously, *any* new feature is something new to teach. The major concern, of course, is that we have two ways of doing "the same thing". However, this is already the case; we already may have both :cpp:`get<N>` and :cpp:`operator[]` for a type. Critically, we are *not* adding a third operation; our proposed operator is *always* a synonym for :cpp:`get<N>` (if it exists). It would be better to think of this proposal as *replacing* the spelling of product type indexed access, with :cpp:`get<N>` being the customization point for the same. Thus, :cpp:`[i]pt` and :cpp:`get<i>(pt)` are equivalent in much the way that :cpp:`a + b` and :cpp:`a.operator+(b)` are equivalent. If this proposal is accepted, we expect that writing the latter of each case will become similarly rare.
 
 Does this make :cpp:`std::apply` (and :cpp:`std::make_from_tuple`) obsolete?
 ----------------------------------------------------------------------------
@@ -478,6 +497,8 @@ All of these would require greater verbosity for even simple use cases.
 
 We believe that our proposal is the best solution, as it solves a crucial need not addressed by these alternatives (extracting a single value from a parameter pack) and further leverages that syntax to maximum versatility with minimal overhead compared to the minimum possible functionality.
 
+We have yet to see a competing direction that can offer comparable functionality with comparable complexity, even ignoring those parts of competing directions which would have wider applicability (e.g. :cpp:`constexpr` function parameters). Every competing direction has, at some point, necessarily proposed some feature of similar or greater complexity which serves only to provide a feature that our proposal would already provide, and *every* competing direction involves much more "wordiness" for any of the use cases our proposal would address.
+
 How does this relate to P0341_?
 -------------------------------
 
@@ -508,6 +529,21 @@ Generalized unpacking provides a much better solution:
   }
 
 The return type of :cpp:`calculateTargetCoordinates` is a regular type, and we can call :cpp:`distanceFromMe` on any product type value that can convert (or be sliced) to a pair of :cpp:`double`\ s.
+
+Another issue which concerns us with P0341_, or any proposal for functions returning parameter packs, is the ambiguity it introduces. Consider the following statement:
+
+.. code:: c++
+
+  auto x = foo();
+
+At present, this is value for virtually anything that :cpp:`foo()` might return. If we allow parameter packs as return types, this will no longer be the case; users will always be uncertain if a particular expression yields a single object, or a parameter pack. If we attempt to solve this by allowing parameter packs to be treated as single objects, we are piling on additional language changes, on top of which one must ask why parameter packs |--| being objects, like many other types |--| should be given uniquely special treatment in fold expressions. This could be especially confusing to novice readers:
+
+.. code:: c++
+
+  auto x = foo();
+  auto y = x + ...; // why can 'x' be used in a fold expression?
+
+At least with parameter packs as they exist today, it is obvious at the declaration site when an identifier names a parameter pack. Using a new syntax to create parameter packs from product types provides a similarly obvious indicator when a parameter pack comes into being.
 
 How does this relate to P0478_?
 -------------------------------
