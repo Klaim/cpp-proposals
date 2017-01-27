@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  P0535R0
-:Date:      2017-01-24
+:Date:      2017-01-27
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -99,7 +99,7 @@ Generalized Unpacking
 
 By presenting slicing first, we may consider generalized unpacking to be an extension of parameter pack operations to work on product types. Specifically, we propose that the above described slicing operator and :cpp:`sizeof...` be extended to accept product types as well as parameter packs. When used on a product type, the type is "unpacked" into a parameter pack.
 
-For example, given a product type :cpp:`t` of size 3, :cpp:`sizeof...(t)` would be well formed and equal to 3, and the expression :cpp:`[:]t` would expand to a parameter pack equivalent to :cpp:`get<0>(t), get<1>(t), get<2>(t)`. (While we use :cpp:`get<N>` here for illustrative purposes, this proposal would reflect any changes made to product type access.) Moreover, as is usual for :cpp:`sizeof`, the argument here should be *unevaluated*.
+For example, given a product type :cpp:`t` of size 3, :cpp:`sizeof...(t)` would be well formed and equal to 3, and the expression :cpp:`[:]t` would expand to a parameter pack equivalent to :cpp:`get<0>(t), get<1>(t), get<2>(t)`. (While we use :cpp:`get<N>` here and throughout for illustrative purposes, this proposal would reflect any changes made to product type access. In particular, it should support all types that may be used in decomposition declarations.) Moreover, as is usual for :cpp:`sizeof`, the argument here should be *unevaluated*.
 
 Accordingly, :cpp:`[expr1]expr2` would be equivalent to :cpp:`get<expr1>(expr2)`; that is, a single value rather than a parameter pack.
 
@@ -319,6 +319,31 @@ The previous example postulated an extension to :cpp:`std::apply` to accept mult
 
 Although this is feasible, and would ideally optimize down to a direct call of the specified function with all of the tuple values extracted directly, it is not meant to imply that this is the only possible solution, nor necessarily even the *best* solution. In particular, we would again note that pack generators would offer an even better solution to this specific problem. Rather, this example is intended to show how our proposed feature allows tail-recursive unpacking of multiple product types; in particular, without using a new tuple to wrap the values as they are unpacked.
 
+Reversing a product type
+------------------------
+
+The above example inspires another function that is often cited as a use case: reversing the elements in a product type. As above, forwarding is omitted for brevity:
+
+.. code:: c++
+
+  template <int n, typename... Args>
+  auto reverse_tuple_helper(Args... args)
+  {
+    constexpr auto r = sizeof...(args) - n; // remaining elements
+    if constexpr (r < 2)
+      return make_tuple(args...);
+
+    return reverse_tuple_helper<n + 1>(args[:n]..., args[-1], args[n:-1]...);
+  }
+
+  template <typename T>
+  auto reverse_tuple(T tuple)
+  {
+    return reverse_tuple_helper<0>([:]tuple...);
+  }
+
+A more complicated implementation could reduce the number of template instantiations by about half, by swapping pairs of arguments starting with the first and last and working inwards. This approach avoids the need for index sequences and can be applied to parameter packs without creation of a temporary tuple to hold the pack.
+
 
 Discussion
 ==========
@@ -346,7 +371,23 @@ Other alternatives that have been proposed or considered:
 
   These support slicing, but the syntax is starting to look rather strange.
 
-The exact syntax for these features could be debated. We prefer prefix :cpp:`operator[]` because C++ programmers are already familiar with :cpp:`operator[]` as an indexing operator, which is essentially what we are proposing (especially for the single value case), and because the proposed syntax is very similar to Python, which will already be familiar to some C++ programmers. At the same time, the choice of a prefix as opposed to postfix syntax makes it clear that the slicing operation |--| which we like to think of as *compile-time indexing* |--| is different from the usual *run-time indexing*.
+- :cpp:`^t...[L:U]`
+
+  This approach, based heavily on a suggestion by Bengt Gustafsson, introduces indexing/slicing and unpacking as completely separate operations and binds indexing/slicing to fold expansion:
+
+  .. code:: c++
+
+    pack...[i]            // equivalent to our [i]pack...
+    pack...[l:u]          // equivalent to our [l:u]pack...
+    ^pt                   // equivalent to our [:]pt
+    ^pt...[i]             // equivalent to our [i]pt
+    sizeof...(^pt)        // equivalent to our sizeof...(pt)
+
+  This has the advantage of being tightly coupled to expansion, and thereby makes moot the difference between indexing (which produces a value) and slicing (which produces a pack). However, this also precludes composition of slicing or indexing. Separating indexing/slicing from unpacking also enforces a distinction between product types and parameter packs, which may or may not be desirable. It also results in more roundabout and verbose syntax for indexed access to a product type.
+
+The exact syntax for these features can be debated. We prefer prefix :cpp:`operator[]` because C++ programmers are already familiar with :cpp:`operator[]` as an indexing operator, which is essentially what we are proposing (especially for the single value case), and because the proposed syntax is very similar to Python, which will already be familiar to some C++ programmers. At the same time, the choice of a prefix as opposed to postfix syntax makes it clear that the slicing operation |--| which we like to think of as *compile-time indexing* |--| is different from the usual *run-time indexing*. The proposed syntax also applies "naturally" to both parameter packs and product types, which gives us a single feature with broad applicability, rather than two entirely orthogonal features.
+
+See also `What alternatives were considered?`_ for a discussion of alternatives which may achieve comparable operations but do not fit within the same general framework as our proposal.
 
 Does this conflict with :cpp:`operator[](constexpr size_t)`?
 ------------------------------------------------------------
