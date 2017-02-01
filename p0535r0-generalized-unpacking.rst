@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  P0535R0
-:Date:      2017-01-27
+:Date:      2017-02-01
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -344,6 +344,44 @@ The above example inspires another function that is often cited as a use case: r
 
 A more complicated implementation could reduce the number of template instantiations by about half, by swapping pairs of arguments starting with the first and last and working inwards. This approach avoids the need for index sequences and can be applied to parameter packs without creation of a temporary tuple to hold the pack.
 
+Static value table
+------------------
+
+It's not entirely unusual to have an array (often a C-style array) or other entity which holds static, immutable data which uses an initializer list to set up the data. For example:
+
+.. code:: c++
+
+  double sin64[] = {
+    _builtin_sin(2.0 * 0.0 * M_PI / 64.0),
+    _builtin_sin(2.0 * 1.0 * M_PI / 64.0),
+    _builtin_sin(2.0 * 2.0 * M_PI / 64.0),
+    _builtin_sin(2.0 * 3.0 * M_PI / 64.0),
+    // ...and so forth
+
+At present, it is typically necessary to write out such data tables by hand (or to write a program to generate source code). Unpacking suggests an alternative approach:
+
+.. code:: c++
+
+  template <size_t Size>
+  struct sin_table_t
+  {
+  public:
+    constexpr static size_t tuple_size()
+    { return Size; }
+
+    template <size_t N> constexpr double get() const
+    {
+      return _builtin_sin(static_cast<double>(N) * K);
+    }
+
+  private:
+    constexpr static auto K = 2.0 * M_PI / static_cast<double>(Size);
+  };
+
+  double sin64[] = { [:](sin_table_t<64>{})... };
+
+While this example still entails some boilerplate, it shows how unpacking makes it possible to define the elements of an initializer list using :cpp:`constexpr` functions.
+
 
 Discussion
 ==========
@@ -351,7 +389,7 @@ Discussion
 What is a "product type"?
 -------------------------
 
-This is an excellent question which deserves its own paper. P0327_ makes a good start. When we get to the point of specifying wording, this will need to be addressed; ideally, this will have happened in parallel. Some "working definitions" which may be used to help with consideration of this proposal are "types which define :cpp:`tuple_size` and :cpp:`get`", or "types to which decomposition declarations may be applied".
+This is an excellent question which deserves its own paper. P0327_ makes a good start. When we get to the point of specifying wording, this will need to be addressed; ideally, this will have happened in parallel. Some "working definitions" which may be used to help with consideration of this proposal are "types which define :cpp:`tuple_size` and :cpp:`get`", or "types to which decomposition declarations may be applied". While we have generally specified that the behavior of our proposed feature should mirror that of decomposition declarations, we would like to see a more general specification of these issues.
 
 Why combine these features?
 ---------------------------
@@ -472,6 +510,25 @@ Consider the following code:
 
 What does this mean with respect to object lifetime? Obviously, we do not want for :cpp:`foo()` to be :cpp:`sizeof...(foo())` times. Rather, the compiler should internally generate a temporary, whose lifetime shall be the same as if the unpacked expression had not been subject to unpacking.
 
+What happens if the indexing expression contains a pack?
+--------------------------------------------------------
+
+Consider the following example:
+
+.. code:: c++
+
+  // let x be a pack of integers
+  // let p be a pack of values
+  foo([x]p...);
+
+What does this mean? Indexing is specified as having higher precedence than expansion, but the indexing expression is itself a pack. The "easy" answer is to make this an error (the indexing expression is not a :cpp:`constexpr` integer, as required), but one could also argue that expansion in this case should occur first, which would make the code equivalent to:
+
+.. code:: c++
+
+  foo([([0]x)]([0]p), [([1]x)]([1]p), ..., [([N]x)]([N]p));
+
+We are inclined to take the easy answer and make this ill-formed. This leaves room for a future proposal to give such code meaning, should we ever desire to do so.
+
 What about ambiguity with lambda captures?
 ------------------------------------------
 
@@ -505,6 +562,22 @@ Note also:
 Although this example appears at first to be the same as the preceding example, :cpp:`n` here is a template parameter and is not eligible for lambda capture, so the expression is parsed as a slicing expression instead (as intended). Again, this seems like a reasonable trade-off, but we would be amenable to requiring parentheses in all cases where the index-expression is just an identifier.
 
 An alternative approach, albeit one requiring additional look-ahead, is to consider the token following the closing :cpp:`]`. If the token is not :cpp:`(`, then we have a slicing expression. If it is :cpp:`(` and the next token is *not* a type name, then we have a slicing expression. Otherwise, we have a lambda capture. This may be more robust, at the cost of being more difficult to implement in compilers.
+
+Should out-of-bounds access be an error?
+----------------------------------------
+
+This is a reasonable question. Consider:
+
+.. code:: c++
+
+  void foo(args...) { bar(args[:3]...); }
+  foo(1, 2);
+
+In the above, `foo` asks for *up to* the first 3 elements of a pack, but in the invocation shown, the pack only has two elements. Should this be an error? On the one hand, experience with Python suggests that silently truncating to the available range has many uses, and where this is not intended, a :cpp:`static_assert` could be used to ensure the size of the pack is as expected. On the other, :cpp:`constexpr` forms of :cpp:`std::min` and :cpp:`std::max`, or simply writing out ternary expressions, could be used to emulate this behavior, which might make programmer intent more clear.
+
+While we are inclined to the former position, with the behavior as presented in this paper, this does not represent a hard position, and we would welcome committee input on this matter.
+
+Note that this only applies to slicing. Out of bounds *indexing* should certainly be an error.
 
 Why choose trailing index?
 --------------------------
@@ -615,6 +688,21 @@ As stated several times, this feature is intended to continue in a direction fir
   auto [a, b] = {[:2]pt...};
 
 It seems natural to desire that one or both of these syntaxes should be permitted, but at this time (even with full adoption of this proposal as presented), both are ill-formed. The latter possibly will become valid if and when general product type access is extended to initializer lists, with the assumption that such extension will include modification of name-binding unpacking to work with any product type. However, there are potential lifetime issues involved. For this reason and others, it may be interesting to extend name-binding unpacking to also work directly with parameter packs, with the added stipulation that a product type converted to a parameter pack is "pass through" when appearing as the RHS of an name-binding unpacking statement; that is, the name-binding unpacking would be aware of the original product type for the purpose of object lifetime. We do not feel that this feature is necessary initially, but would recommend a follow-up paper if the feature proposed is accepted.
+
+Pack Generators "Lite"
+----------------------
+
+In the `Static value table`_ example, we showed how to create a "product type" that exists solely to be unpacked and used as a value generator. This involved some boilerplate code. From the version of the example given, it should be readily apparent how one might rewrite the example as follows:
+
+.. code:: c++
+
+  auto generate_sin64 = [](size_t n) {
+    return _builtin_sin(2.0 * M_PI * static_cast<double>(n) / 64.0); }
+
+  double sin64[] = {
+    [:](std::generate_pack_t<64, generate_sin64>{})... };
+
+Here we show how a standard library type might be provided to take care of most of the boilerplate in order to allow the direct conversion of a lambda to a parameter pack. This lacks the expressive power of full pack generators, and makes it rather painfully obvious that we'd like to have :cpp:`constexpr` parameters, but despite these limitations, the possibilities are interesting.
 
 
 Acknowledgments
