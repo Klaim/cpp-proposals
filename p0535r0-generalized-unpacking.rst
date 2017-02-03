@@ -3,7 +3,7 @@
 ====================================================
 
 :Document:  P0535R0
-:Date:      2017-02-01
+:Date:      2017-02-03
 :Project:   ISO/IEC JTC1 SC22 WG21 Programming Language C++
 :Audience:  Evolution Working Group
 :Author:    Matthew Woehlke (mwoehlke.floss@gmail.com)
@@ -43,13 +43,13 @@ This proposal introduces two new, related concepts: "generalized unpacking" (the
 Background
 ==========
 
-There is an increasing push in C++ to add interoperability between values and value sequences, exemplified by the recent addition of "structured binding", :cpp:`std::apply`, and :cpp:`std::make_from_tuple` in C++17, and by proposals such as P0327_ that work toward expanding and clarifying the concept of value sequences (using the term "product type") and P0341_ which proposes certain mechanisms for using product types. Similar features have long been present in other languages, with Python frequently held up as a representative example (see also `PEP 0448`_). While we feel that these represent steps in the right direction, there remain problems to be solved.
+There is an increasing push in C++ to add interoperability between values and value sequences, exemplified by the recent addition of "structured binding", :cpp:`std::apply`, and :cpp:`std::make_from_tuple` in C++17, and by proposals such as P0327_\ [#io]_ that work toward expanding and clarifying the concept of value sequences (using the term "product type") and P0341_ which proposes certain mechanisms for using product types. Similar features have long been present in other languages, with Python frequently held up as a representative example (see also `PEP 0448`_). While we feel that these represent steps in the right direction, there remain problems to be solved.
 
 
 Rationale
 =========
 
-Parameter pack slicing, particularly single valued slicing, solves a known problem when working with parameter packs. Several algorithms and ideas for working with parameter packs require the ability to select an item from a parameter pack by index.
+Parameter pack slicing, particularly single valued slicing (i.e. indexing), solves a known problem when working with parameter packs. Several algorithms and ideas for working with parameter packs require the ability to select an item from a parameter pack by index.
 
 Generalized unpacking greatly expands the ability to work with product types. Although :cpp:`std::apply` and :cpp:`std::make_from_tuple` attempt to fill some of these roles, their mere existence, and especially that they are two separate functions despite serving conceptually identical purposes, is indicative of the usefulness of a language feature. Moreover, these functions have significant limitations: they can only cover specific use cases, they cannot perform slicing operations on their own, and they cannot be readily used where the desired argument list *includes* but does not *solely consist of* a single product type.
 
@@ -68,7 +68,7 @@ We propose to introduce a new prefix operator, :lit:`[`\ :var:`slicing_expressio
 
 The first form shall select a *single* element of a pack, and shall yield this value as a single value (i.e. not as a new pack). For example, the expression :cpp:`[1]pack` shall yield the second value of the parameter pack :cpp:`pack`. If the :var:`index` is negative, it shall first be added to :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`. If the index (after the preceding step, if applicable) is out of bounds, the expression shall be ill-formed.
 
-The second form shall return a *variable* slice of the parameter pack, and shall yield this value as a new parameter pack. Both indices are optional and may be omitted. The first :var:`index` shall specify the index of the first pack element to yield. If omitted, the value :cpp:`0` shall be assumed. The second :var:`index` shall specify the *upper bound* on the indices to be yielded, meaning that the specified index is *not* included. If omitted, the value :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)` shall be assumed. If either value is negative, it shall first be added to :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`. Each value shall then be clamped to the range [\ :cpp:`0`, :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`]. If, after normalization and clamping, the upper index is less than the lower index, an empty parameter pack shall be yielded. (Note that this means that a variable slice is never ill-formed due to out of bounds index values.)
+The second form shall return a *variable* slice of the parameter pack, and shall yield this value as a new parameter pack. Both indices are optional and may be omitted. The first :var:`index` shall specify the index of the first pack element to yield. If omitted, the value :cpp:`0` shall be assumed. The second :var:`index` shall specify the *upper bound* on the indices to be yielded, meaning that the specified index is *not* included. If omitted, the value :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)` shall be assumed\ [#mi]_. If either value is negative, it shall first be added to :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`. Each value shall then be clamped to the range [\ :cpp:`0`, :cpp:`sizeof...(`\ :var:`pack_expression`\ :cpp:`)`]. If, after normalization and clamping, the upper index is less than the lower index, an empty parameter pack shall be yielded. (Note that this means that a variable slice is never ill-formed due to out of bounds index values.)
 
 This can be represented in pseudo-code::
 
@@ -109,7 +109,7 @@ This makes possible uses like the following, which are not readily accomplished 
 
 .. code:: c++
 
-  // let a1..a9 be single values
+  // let a1..a3 be single values
   // let t1, t2 be product types ("tuple-like")
 
   auto x = SomeType(a1, [:]t1..., [3:]t2..., a2);
@@ -235,7 +235,7 @@ While this example is overly simplified, what if it was significantly more effic
       return better_of(best([:k/2]args...), best([k/2:]args...));
   }
 
-Note also that the above code no longer needs to accept the first argument separately.
+Note also that the above code no longer needs to accept the first argument separately. (For those wondering: no, invoking this with no arguments will not cause a runaway recursion. The compiler recognizes the recursive attempt to call the function with no arguments and rejects it because the return type has not been determined.)
 
 Unpacking and Fold Expressions
 ------------------------------
@@ -322,7 +322,7 @@ Although this is feasible, and would ideally optimize down to a direct call of t
 Reversing a product type
 ------------------------
 
-The above example inspires another function that is often cited as a use case: reversing the elements in a product type. As above, forwarding is omitted for brevity:
+The previous example inspires another function that is often cited as a use case: reversing the elements in a product type. As above, forwarding is omitted for brevity:
 
 .. code:: c++
 
@@ -352,10 +352,10 @@ It's not entirely unusual to have an array (often a C-style array) or other enti
 .. code:: c++
 
   double sin64[] = {
-    _builtin_sin(2.0 * 0.0 * M_PI / 64.0),
-    _builtin_sin(2.0 * 1.0 * M_PI / 64.0),
-    _builtin_sin(2.0 * 2.0 * M_PI / 64.0),
-    _builtin_sin(2.0 * 3.0 * M_PI / 64.0),
+    _constexpr_sin(2.0 * 0.0 * M_PI / 64.0),
+    _constexpr_sin(2.0 * 1.0 * M_PI / 64.0),
+    _constexpr_sin(2.0 * 2.0 * M_PI / 64.0),
+    _constexpr_sin(2.0 * 3.0 * M_PI / 64.0),
     // ...and so forth
 
 At present, it is typically necessary to write out such data tables by hand (or to write a program to generate source code). Unpacking suggests an alternative approach:
@@ -371,7 +371,7 @@ At present, it is typically necessary to write out such data tables by hand (or 
 
     template <size_t N> constexpr double get() const
     {
-      return _builtin_sin(static_cast<double>(N) * K);
+      return _constexpr_sin(static_cast<double>(N) * K);
     }
 
   private:
@@ -399,7 +399,7 @@ We prefer to think of this proposal as not two separate features (parameter pack
 Why choose prefix :cpp:`operator[]`?
 ------------------------------------
 
-Other alternatives that have been proposed or considered:
+Before answering, let us look at some other alternatives that have been proposed or considered:
 
 - :cpp:`t.N`, :cpp:`t~N`
 
@@ -421,7 +421,7 @@ Other alternatives that have been proposed or considered:
     ^pt...[i]             // equivalent to our [i]pt
     sizeof...(^pt)        // equivalent to our sizeof...(pt)
 
-  This has the advantage of being tightly coupled to expansion, and thereby makes moot the difference between indexing (which produces a value) and slicing (which produces a pack). However, this also precludes composition of slicing or indexing. Separating indexing/slicing from unpacking also enforces a distinction between product types and parameter packs, which may or may not be desirable. It also results in more roundabout and verbose syntax for indexed access to a product type.
+  This has the advantage of being tightly coupled to expansion, and thereby makes moot the difference between indexing (which produces a value) and slicing (which produces a pack). However, this also precludes composition of slicing or indexing (see `Why choose trailing index?`_ for an example where composition may be useful). Separating indexing/slicing from unpacking enforces a distinction between product types and parameter packs, which may or may not be desirable. It also results in more roundabout and verbose syntax for indexed access to a product type.
 
 The exact syntax for these features can be debated. We prefer prefix :cpp:`operator[]` because C++ programmers are already familiar with :cpp:`operator[]` as an indexing operator, which is essentially what we are proposing (especially for the single value case), and because the proposed syntax is very similar to Python, which will already be familiar to some C++ programmers. At the same time, the choice of a prefix as opposed to postfix syntax makes it clear that the slicing operation |--| which we like to think of as *compile-time indexing* |--| is different from the usual *run-time indexing*. The proposed syntax also applies "naturally" to both parameter packs and product types, which gives us a single feature with broad applicability, rather than two entirely orthogonal features.
 
@@ -454,7 +454,7 @@ One "obvious" argument against product type slicing is that :cpp:`constexpr` par
 
 - Such an operator still cannot provide slicing. See also `What alternatives were considered?`_
 
-Our proposed language feature avoids these issues by being clearly distinct from existing :cpp:`operator[]`; it is in essence a novel operator. This is especially salient in the case of multi-valued slicing / unpacking, but also serves to make it more obvious to the user that a language feature is being employed rather than a traditional operator function.
+Our proposed language feature avoids these issues by being clearly distinct from existing :cpp:`operator[]`; it is in essence a novel operator\ [#no]_. This is especially salient in the case of multi-valued slicing / unpacking, but also serves to make it more obvious to the user that a language feature is being employed rather than a traditional operator function.
 
 Doesn't adding another operator hurt teachability?
 --------------------------------------------------
@@ -464,7 +464,7 @@ Obviously, *any* new feature is something new to teach. The major concern, of co
 Does this make :cpp:`std::apply` (and :cpp:`std::make_from_tuple`) obsolete?
 ----------------------------------------------------------------------------
 
-No. There will almost certainly remain cases where :cpp:`std::apply` and/or :cpp:`std::make_from_tuple` are useful; for example, when using the operation as a functor that gets passed as an argument, or when expansions are nested. In fact, we use :cpp:`std::apply` in at least one of the preceding examples *in conjunction with* our proposed feature.
+No. There will almost certainly remain cases where :cpp:`std::apply` and/or :cpp:`std::make_from_tuple` are useful; for example, when using the operation as a functor that gets passed as an argument, or when expansions are nested. In fact, we used :cpp:`std::apply` in one of the preceding examples *in conjunction with* our proposed feature.
 
 That said, we do expect that *most* uses of :cpp:`std::apply` and :cpp:`std::make_from_tuple` can be replaced with the use of this feature.
 
@@ -490,7 +490,7 @@ What code is actually generated by the above?
   // option 2
   auto x = get<1>(t);
 
-In most cases, the question should be irrelevant; the compiler will eliminate the superfluous calls to :cpp:`get` as accomplishing nothing. However, if :cpp:`get` has side effects (however much we might be inclined to consider that poor design), this could matter.
+In most cases, the question should be irrelevant; the compiler would eliminate the superfluous calls to :cpp:`get` as having no side effects. However, if :cpp:`get` has side effects (however much we might be inclined to consider that poor design), this could matter.
 
 Certainly in the above example, we believe that the compiler should elide the "superfluous" value accesses, as this feels like the most natural consequence of combining the unpacking and slicing operations. A more interesting question, which we believe should be open to committee input, is what to do if slicing and unpacking are explicitly separated, as in :cpp:`[1][:]t`. While our inclination is that this form should be exactly equivalent to :cpp:`[1]t`, an argument could be made that writing out the operations separately implies that the programmer intends for each value of :cpp:`t` to be accessed, with any resulting side effects incurred, before reducing the resulting parameter pack to only the value at index ``1``.
 
@@ -508,7 +508,7 @@ Consider the following code:
   // let foo() be a function returning a newly constructed product type
   bar([:]foo()...);
 
-What does this mean with respect to object lifetime? Obviously, we do not want for :cpp:`foo()` to be :cpp:`sizeof...(foo())` times. Rather, the compiler should internally generate a temporary, whose lifetime shall be the same as if the unpacked expression had not been subject to unpacking.
+What does this mean with respect to object lifetime? Obviously, we do not want for :cpp:`foo()` to be called :cpp:`sizeof...(foo())` times. Rather, the compiler should internally generate a temporary, whose lifetime shall be the same as if the unpacked expression had not been subject to unpacking.
 
 What happens if the indexing expression contains a pack?
 --------------------------------------------------------
@@ -527,12 +527,12 @@ What does this mean? Indexing is specified as having higher precedence than expa
 
   foo([([0]x)]([0]p), [([1]x)]([1]p), ..., [([N]x)]([N]p));
 
-We are inclined to take the easy answer and make this ill-formed. This leaves room for a future proposal to give such code meaning, should we ever desire to do so.
+We are strongly inclined to take the easy answer and make this ill-formed. This leaves room for a future proposal to give such code meaning, should we ever desire to do so.
 
 What about ambiguity with lambda captures?
 ------------------------------------------
 
-A lambda capture is required to be a variable in the current scope. As such, the compiler can determine if a :cpp:`[` starts a lambda capture or a slicing expression by parsing at most three additional tokens. If the first token following the :cpp:`[` is not a variable eligible for lambda capture (for example, an integer literal), then the :cpp:`[` starts a slicing expression. If the first token matches an in-scope (and :cpp:`constexpr`) variable name, and the second token is not a :cpp:`,`, then the :cpp:`[` starts a slicing expression. In all other cases, the :cpp:`[` shall be taken to start a lambda capture, as in current C++. (If the first token is :cpp:`&`, the preceding rules may be applied with the token counts shifted by 1. However, this assumes that there exists a case where unary :cpp:`operator&` is :cpp:`constexpr`. This may not be reasonable, in which case :cpp:`[&` would always indicate a lambda capture, and at most only two tokens following :cpp:`[` must be parsed.)
+A lambda capture is required to be a variable in the current scope. As such, the compiler can determine if a :cpp:`[` starts a lambda capture or a slicing expression by parsing at most three additional tokens. If the first token following the :cpp:`[` is not a variable eligible for lambda capture (for example, an integer literal), then the :cpp:`[` starts a slicing expression. If the first token matches an in-scope (and :cpp:`constexpr`) variable name, and the second token is not a :cpp:`,` or :cpp:`]`, then the :cpp:`[` starts a slicing expression. In all other cases, the :cpp:`[` shall be taken to start a lambda capture, as in current C++. (If the first token is :cpp:`&`, the preceding rules may be applied with the token counts shifted by 1. However, this assumes that there exists a case where unary :cpp:`operator&` is :cpp:`constexpr`. This may not be reasonable, in which case :cpp:`[&` would always indicate a lambda capture, and at most only two tokens following :cpp:`[` must be parsed.)
 
 Consider the following example:
 
@@ -561,7 +561,7 @@ Note also:
 
 Although this example appears at first to be the same as the preceding example, :cpp:`n` here is a template parameter and is not eligible for lambda capture, so the expression is parsed as a slicing expression instead (as intended). Again, this seems like a reasonable trade-off, but we would be amenable to requiring parentheses in all cases where the index-expression is just an identifier.
 
-An alternative approach, albeit one requiring additional look-ahead, is to consider the token following the closing :cpp:`]`. If the token is not :cpp:`(`, then we have a slicing expression. If it is :cpp:`(` and the next token is *not* a type name, then we have a slicing expression. Otherwise, we have a lambda capture. This may be more robust, at the cost of being more difficult to implement in compilers.
+An alternative approach, albeit one requiring additional look-ahead, is to consider the token following the closing :cpp:`]`. If the token is not :cpp:`(`, then we have a slicing expression. If it is :cpp:`(` and the next token is *not* a type name, then we have a slicing expression. Otherwise, we have a lambda capture. This may be more robust, at the cost of being more difficult to implement in compilers. (This also runs into the difficulty that future proposals may allow additional syntaxes for lambdas. A better expression would be that the compiler attempts first to treat the code as a lambda, and falls back to a slicing expression if that fails. Perhaps compilers could implement this as a non-conforming extension.)
 
 Should out-of-bounds access be an error?
 ----------------------------------------
@@ -599,7 +599,7 @@ No. While it may be possible to implement a standardized library function to ext
 What alternatives were considered?
 ----------------------------------
 
-There are at least three possible alternatives that could provide features similar to generalized unpacking, as proposed here. The first alternative is first class support for multiple return values, where such are treated as parameter packs. The second is modifying structured binding (which we prefer to call "name-binding unpacking", for symmetry with "generalized unpacking") to support specifying a parameter pack as one of the unpacked values. The third is to introduce parameter pack generators.
+There are at least three possible alternatives that could provide features similar to generalized unpacking, as proposed here. The first alternative is first class support for multiple return values, where such are treated as parameter packs. The second is modifying decomposition declarations (which we like to also call "name-binding unpacking", for symmetry with "generalized unpacking") to support specifying a parameter pack as one of the unpacked values. The third is to introduce parameter pack generators.
 
 - First class support for multiple return values (which is effectively proposed by P0341_) is an ambitious feature with assorted difficulties (see next question). Moreover, if P0536_ is accepted, the need for true first class multiple return values would be significantly lessened.
 
@@ -650,7 +650,7 @@ Another issue which concerns us with P0341_, or any proposal for functions retur
 
   auto x = foo();
 
-At present, this is value for virtually anything that :cpp:`foo()` might return. If we allow parameter packs as return types, this will no longer be the case; users will always be uncertain if a particular expression yields a single object, or a parameter pack. If we attempt to solve this by allowing parameter packs to be treated as single objects, we are piling on additional language changes, on top of which one must ask why parameter packs |--| being objects, like many other types |--| should be given uniquely special treatment in fold expressions. This could be especially confusing to novice readers:
+At present, :cpp:`x` here is a value, for virtually anything that :cpp:`foo()` might return. If we allow parameter packs as return types, this will no longer be the case; users will be uncertain if a particular expression yields a single object, or a parameter pack. If we attempt to solve this by allowing parameter packs to be treated as single objects, we are piling on additional language changes, on top of which one must ask why parameter packs |--| being objects, like many other types |--| should be given uniquely special treatment in fold expressions. This could be especially confusing to novice readers:
 
 .. code:: c++
 
@@ -687,7 +687,7 @@ As stated several times, this feature is intended to continue in a direction fir
   auto [a, b] = [:2]pt;
   auto [a, b] = {[:2]pt...};
 
-It seems natural to desire that one or both of these syntaxes should be permitted, but at this time (even with full adoption of this proposal as presented), both are ill-formed. The latter possibly will become valid if and when general product type access is extended to initializer lists, with the assumption that such extension will include modification of name-binding unpacking to work with any product type. However, there are potential lifetime issues involved. For this reason and others, it may be interesting to extend name-binding unpacking to also work directly with parameter packs, with the added stipulation that a product type converted to a parameter pack is "pass through" when appearing as the RHS of an name-binding unpacking statement; that is, the name-binding unpacking would be aware of the original product type for the purpose of object lifetime. We do not feel that this feature is necessary initially, but would recommend a follow-up paper if the feature proposed is accepted.
+It seems natural to desire that one or both of these syntaxes should be permitted, but at this time (even with full adoption of this proposal as presented), both are ill-formed. The latter possibly will become valid if and when general product type access is extended to initializer lists, with the assumption that such extension will include the ability to use an initializer list on the RHS of a decomposition declaration. However, there are potential lifetime issues involved. For this reason and others, it may be interesting to extend decomposition declarations to also work directly with parameter packs, with the added stipulation that a product type converted to a parameter pack is "pass through" when appearing as the RHS of a decomposition declaration; that is, the decomposition declaration would be aware of the original product type for the purpose of object lifetime. We do not feel that this feature is necessary initially, but would recommend a follow-up paper if the feature proposed is accepted.
 
 Pack Generators "Lite"
 ----------------------
@@ -709,6 +709,16 @@ Acknowledgments
 ===============
 
 We wish to thank everyone on the ``std-proposals`` forum that has contributed over the long period for which this has been marinating. We also wish to thank everyone that worked to bring decomposition declarations to C++17, as well as the authors of all cited papers for their contributions to this field.
+
+
+Footnotes
+=========
+
+.. [#io] In particular, we would encourage that this proposal be considered as providing the product type indexing operator to which P0327_ alludes, noting particularly P0327_\ 's reference to a "concrete proposal for parameter packs direct access".
+
+.. [#mi] Given index truncation, we could also specify "a large number" (:cpp:`std::numeric_limits<size_t>::max()`) and obtain equivalent behavior. The implementation should be allowed to vary, so long as an omitted upper bound has the expected effect.
+
+.. [#no] Particularly, it is the novel operator alluded to in P0327_, as has been previously noted.
 
 
 References
